@@ -1,9 +1,17 @@
 package io.github.jtmaher2.pianorepertoireapp;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
+
+import java.io.File;
+import java.io.FileReader;
 
 public class PieceListActivity extends AppCompatActivity {
 
@@ -15,23 +23,18 @@ public class PieceListActivity extends AppCompatActivity {
         mRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        String[] myDataset = new String[3];
-        myDataset[0] = "James";
-        myDataset[1] = "Thomas";
-        myDataset[2] = "Maher";
-        RecyclerView.Adapter mAdapter = new MyMyPiecesRecyclerViewAdapter(myDataset);
-        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setAdapter(new MyMyPiecesRecyclerViewAdapter(
+                new File(
+                        Environment.getExternalStorageDirectory().getPath() +
+                                "/PianoRepertoire/")
+                        .list(), getApplicationContext()));
 
-        //Toolbar toolbar = findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-
-        //FloatingActionButton fab = findViewById(R.id.fab);
-        //fab.setOnClickListener(new View.OnClickListener() {
-          //  @Override
-            //public void onClick(View view) {
-              //  Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                //        .setAction("Action", null).show();
-            //}
-        //});
+        FloatingActionButton fab = findViewById(R.id.new_rec_btn);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+            }
+        });
     }
 }

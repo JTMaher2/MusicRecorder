@@ -207,8 +207,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void writeAudioDataToFile(final String pieceName) {
+        // create a directory for this app, if it doesn't already exist
         new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire").mkdir();
+
+        // make a new file for this recording in the above directory
         filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceName + ".pcm";
+
         short sData[] = new short[BufferElements2Rec];
 
         os = null;

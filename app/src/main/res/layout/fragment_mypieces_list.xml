@@ -9,5 +9,7 @@
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-    tools:context=".MyPiecesFragment"
-    tools:listitem="@layout/fragment_mypieces" />
+
+    tools:listitem="@layout/fragment_mypieces" >
+
+</android.support.v7.widget.RecyclerView>
