@@ -21,8 +21,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView9"
         app:layout_constraintVertical_bias="0.644"
-        android:inputType="text"
-        tools:ignore="Autofill" />
+        android:importantForAutofill="no"
+        android:inputType="text" />
 
     <EditText
         android:id="@+id/detailsComposerTextView"
@@ -37,7 +37,6 @@
         app:layout_constraintStart_toStartOf="@+id/detailsNameTextView"
         app:layout_constraintTop_toBottomOf="@+id/detailsNameTextView"
         android:importantForAutofill="no"
-        tools:ignore="UnusedAttribute"
         android:inputType="text" />
 
     <EditText
@@ -53,8 +52,7 @@
         app:layout_constraintTop_toBottomOf="@+id/detailsComposerTextView"
         app:layout_constraintVertical_chainStyle="spread_inside"
         android:inputType="text"
-        android:importantForAutofill="no"
-        tools:ignore="UnusedAttribute" />
+        android:importantForAutofill="no" />
 
     <TextView
         android:id="@+id/detailsFavoriteTextView"

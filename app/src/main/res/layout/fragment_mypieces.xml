@@ -15,5 +15,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/piece_details_btn"
-        android:text=">"/>
+        android:text="@string/rec_start_icon"/>
 </LinearLayout>

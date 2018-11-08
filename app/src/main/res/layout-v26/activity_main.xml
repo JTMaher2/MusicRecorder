@@ -20,8 +20,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/record_timer"
-        android:importantForAutofill="no"
-        tools:ignore="UnusedAttribute" />
+        android:importantForAutofill="no" />
 
     <Button
         android:id="@+id/start_recording_btn"
@@ -65,8 +64,7 @@
         app:layout_constraintHorizontal_bias="0.745"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/piece_name_textview"
-        android:importantForAutofill="no"
-        tools:ignore="UnusedAttribute" />
+        android:importantForAutofill="no" />
 
     <EditText
         android:id="@+id/notes_textview"
@@ -85,8 +83,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/composer_textview"
         app:layout_constraintVertical_bias="0.0"
-        android:importantForAutofill="no"
-        tools:ignore="UnusedAttribute" />
+        android:importantForAutofill="no" />
 
     <TextView
         android:id="@+id/textView4"
@@ -117,8 +114,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/stop_recording_btn"
         tools:text="HH:MM:SS"
-        android:importantForAutofill="no"
-        tools:ignore="UnusedAttribute" />
+        android:importantForAutofill="no" />
 
     <Button
         android:id="@+id/done_btn"

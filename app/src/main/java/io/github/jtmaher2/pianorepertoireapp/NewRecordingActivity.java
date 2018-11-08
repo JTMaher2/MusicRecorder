@@ -1,17 +1,27 @@
 package io.github.jtmaher2.pianorepertoireapp;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteCursorDriver;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQuery;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -22,17 +32,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
+import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
+
+public class NewRecordingActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int RECORDER_SAMPLERATE = 44100;
-    private static final int COUNT = 524288;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 0;
@@ -40,26 +51,50 @@ public class MainActivity extends AppCompatActivity {
     private FileOutputStream os;
     private String filePath;
 
-    int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
-    int BytesPerElement = 2; // 2 bytes in 16bit format
+    private final int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
+    private final int BytesPerElement = 2; // 2 bytes in 16bit format
     private Thread recordingThread = null;
     private boolean isRecording = false;
     private AudioRecord recorder;
     private static Timer timer;
-    private TextView timerTv, pieceNameTv;
+    private TextView timerTv, pieceNameTv, composerTv, notesTv;
+    private ConstraintLayout constraintLayout;
+    private static final String EXISTING_PIECE_URI = "existing_piece_uri";
+    private static final String FOR_EXISTING = "for_existing";
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
+        return new Loader<>(getApplicationContext());
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent i = getIntent();
+        final boolean forExisting = i.getBooleanExtra(FOR_EXISTING, false);
+        final Uri existingPieceUri = i.getParcelableExtra(EXISTING_PIECE_URI);
         // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
+        if (ContextCompat.checkSelfPermission(NewRecordingActivity.this,
                 Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
 
             // Permission is not granted
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+            if (ActivityCompat.shouldShowRequestPermissionRationale(NewRecordingActivity.this,
                     Manifest.permission.RECORD_AUDIO)) {
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -67,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
             } else {
                 // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(MainActivity.this,
+                ActivityCompat.requestPermissions(NewRecordingActivity.this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
                         MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
 
@@ -88,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
         timerTv.setEnabled(false);
 
         pieceNameTv = findViewById(R.id.piece_name_textview);
+        composerTv = findViewById(R.id.composer_textview);
+        notesTv = findViewById(R.id.notes_textview);
+        constraintLayout = findViewById(R.id.constraint_layout);
+
         /*Button playBtn = findViewById(R.id.playbtn);
         playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -142,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                     isRecording = true;
                     recordingThread = new Thread(new Runnable() {
                         public void run() {
-                            writeAudioDataToFile(pieceNameTv.getText().toString());
+                            writeAudioDataToFile(pieceNameTv.getText().toString(), forExisting, existingPieceUri);
                         }
                     }, "AudioRecorder Thread");
                     recordingThread.start();
@@ -186,6 +225,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
             }
         });
+
+
     }
 
     @Override
@@ -206,57 +247,142 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void writeAudioDataToFile(final String pieceName) {
-        // create a directory for this app, if it doesn't already exist
-        new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire").mkdir();
+    // saves piece information to the database
+    private long savePiece(boolean forExisting, Uri existingPieceUri) {
+        Uri pieceUri;
+        if (!forExisting) {
+            // create ContentValues object containing new piece's key-value pairs
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(DatabaseDescription.Piece.COLUMN_NAME,
+                    pieceNameTv.getText().toString());
+            contentValues.put(DatabaseDescription.Piece.COLUMN_COMPOSER,
+                    composerTv.getText().toString());
+            contentValues.put(DatabaseDescription.Piece.COLUMN_NOTES,
+                    notesTv.getText().toString());
 
-        // make a new file for this recording in the above directory
-        filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceName + ".pcm";
-
-        short sData[] = new short[BufferElements2Rec];
-
-        os = null;
-
-        try {
-            // Here, thisActivity is the current activity
-            if (ContextCompat.checkSelfPermission(MainActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                // Permission is not granted
-                // Should we show an explanation?
-                if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    // Show an explanation to the user *asynchronously* -- don't block
-                    // this thread waiting for the user's response! After the user
-                    // sees the explanation, try again to request the permission.
-                    Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
-                } else {
-                    // No explanation needed; request the permission
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-
-                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                    // app-defined int constant. The callback method gets the
-                    // result of the request.
-                }
-            } else {
-                // Permission has already been granted
-                os = new FileOutputStream(filePath);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            // use Activity's ContentResolver to invoke
+            // insert on the PianoRepertoirePiecesContentProvider
+            pieceUri = getContentResolver().insert(
+                    DatabaseDescription.Piece.CONTENT_URI, contentValues);
+        } else {
+            pieceUri = existingPieceUri;
         }
 
-        while (isRecording) {
-            recorder.read(sData, 0, BufferElements2Rec);
+        if (pieceUri != null) {
+            Snackbar.make(constraintLayout,
+                    R.string.piece_added, Snackbar.LENGTH_LONG).show();
+            //listener.onAddEditCompleted(newPieceUri);
+            String id = pieceUri.getLastPathSegment();
+            if (id != null)
+            {
+                return Long.parseLong(id);
+            }
+        }
+        else {
+            Snackbar.make(constraintLayout,
+                    R.string.piece_not_added, Snackbar.LENGTH_LONG).show();
+        }
+
+        return -1;
+    }
+
+    // saves recording file name to the database
+    private void saveRecordingFileName(long pieceId) {
+        // create ContentValues object containing recording's key-value pairs
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(DatabaseDescription.Recording.COLUMN_PIECE_ID,
+                pieceId);
+        contentValues.put(DatabaseDescription.Recording.COLUMN_FILE_NAME,
+                pieceNameTv.getText().toString() + ".pcm");
+        contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, 0);
+        contentValues.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
+
+        // use Activity's ContentResolver to invoke
+        // insert on the PianoRepertoireRecordingsContentProvider
+        Uri newRecordingUri = getContentResolver().insert(
+                DatabaseDescription.Recording.CONTENT_URI, contentValues);
+
+        if (newRecordingUri != null) {
+            Snackbar.make(constraintLayout,
+                    R.string.recording_added, Snackbar.LENGTH_LONG).show();
+        }
+        else {
+            Snackbar.make(constraintLayout,
+                    R.string.recording_not_added, Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void writeAudioDataToFile(final String pieceName, boolean forExisting, Uri existingPieceId) {
+        // create a directory for this app, if it doesn't already exist
+        File dir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
+        boolean dirExists;
+        if (dir.isDirectory()) {
+            dirExists = true;
+        } else {
+            dirExists = dir.mkdir();
+        }
+        if (dirExists) {
+            // make a new file for this recording in the above directory
+            filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceName + ".pcm";
+
+            PianoRepertoireDatabaseHelper prdh = new PianoRepertoireDatabaseHelper(getApplicationContext());
+            SQLiteDatabase sqldb = SQLiteDatabase.create(new SQLiteDatabase.CursorFactory() {
+                @Override
+                public Cursor newCursor(SQLiteDatabase sqLiteDatabase, SQLiteCursorDriver sqLiteCursorDriver, String s, SQLiteQuery sqLiteQuery) {
+                    return null;
+                }
+            });
+
+            prdh.onCreate(sqldb); // Create the PIECES and RECORDINGS tables if they don't already exist
+            long pieceId = savePiece(forExisting, existingPieceId);
+            saveRecordingFileName(pieceId);
+
+            short sData[] = new short[BufferElements2Rec];
+
+            os = null;
+
             try {
-                byte bData[] = short2byte(sData);
-                assert os != null;
-                os.write(bData, 0, BufferElements2Rec * BytesPerElement);
-            } catch (IOException e) {
+                // Here, thisActivity is the current activity
+                if (ContextCompat.checkSelfPermission(NewRecordingActivity.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    // Permission is not granted
+                    // Should we show an explanation?
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(NewRecordingActivity.this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        // Show an explanation to the user *asynchronously* -- don't block
+                        // this thread waiting for the user's response! After the user
+                        // sees the explanation, try again to request the permission.
+                        Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // No explanation needed; request the permission
+                        ActivityCompat.requestPermissions(NewRecordingActivity.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+
+                        // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                        // app-defined int constant. The callback method gets the
+                        // result of the request.
+                    }
+                } else {
+                    // Permission has already been granted
+                    os = new FileOutputStream(filePath);
+                }
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
+            }
+
+            while (isRecording) {
+                recorder.read(sData, 0, BufferElements2Rec);
+                try {
+                    byte bData[] = short2byte(sData);
+                    assert os != null;
+                    os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -278,7 +404,6 @@ public class MainActivity extends AppCompatActivity {
             sData[i] = 0;
         }
         return bytes;
-
     }
 
     /*protected static void startTimer() {
