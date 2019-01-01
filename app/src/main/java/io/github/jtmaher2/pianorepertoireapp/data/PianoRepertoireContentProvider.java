@@ -25,6 +25,8 @@ public class PianoRepertoireContentProvider extends ContentProvider {
     private static final int PIECES = 2; // manipulate pieces table
     private static final int ONE_RECORDING = 3; // manipulate one recording
     private static final int RECORDINGS = 4; // manipulate recordings table
+    private static final int ONE_REMIX = 5; // manipulate one remix
+    private static final int REMIXES = 6; // manipulate remixes table
 
     // static block to configure this ContentProvider's UriMatcher
     static {
@@ -43,6 +45,14 @@ public class PianoRepertoireContentProvider extends ContentProvider {
         // Uri for Recordings table
         uriMatcher.addURI(DatabaseDescription.AUTHORITY,
                 DatabaseDescription.Recording.TABLE_NAME, RECORDINGS);
+
+        // Uri for Remix with the specified id (#)
+        uriMatcher.addURI(DatabaseDescription.AUTHORITY,
+                DatabaseDescription.Remix.TABLE_NAME + "/#", ONE_REMIX);
+
+        // Uri for Remixes table
+        uriMatcher.addURI(DatabaseDescription.AUTHORITY,
+                DatabaseDescription.Remix.TABLE_NAME, REMIXES);
     }
 
     // called when the PianoRepertoireContentProvider is created
@@ -59,7 +69,7 @@ public class PianoRepertoireContentProvider extends ContentProvider {
         return null;
     }
 
-    // query the pieces or recordings table in the database
+    // query the pieces/recordings/remixes table in the database
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection,
                         String selection, String[] selectionArgs, String sortOrder) {
@@ -84,6 +94,14 @@ public class PianoRepertoireContentProvider extends ContentProvider {
             case RECORDINGS: // all recordings will be selected
                 queryBuilder.setTables(DatabaseDescription.Recording.TABLE_NAME);
                 break;
+            case ONE_REMIX: // remix with specified id will be selected
+                queryBuilder.setTables(DatabaseDescription.Remix.TABLE_NAME);
+                queryBuilder.appendWhere(
+                        DatabaseDescription.Remix._ID + "=" + uri.getLastPathSegment());
+                break;
+            case REMIXES: // all remixes will be selected
+                queryBuilder.setTables(DatabaseDescription.Remix.TABLE_NAME);
+                break;
             default:
                 Context c = getContext();
                 String error = "";
@@ -107,7 +125,7 @@ public class PianoRepertoireContentProvider extends ContentProvider {
         return cursor;
     }
 
-    // insert a new piece/recording in the database
+    // insert a new piece/recording/remix in the database
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
         Uri newUri;
@@ -145,6 +163,30 @@ public class PianoRepertoireContentProvider extends ContentProvider {
                 // otherwise, throw an exception
                 if (rowId > 0) { // SQLite row IDs start at 1
                     newUri = DatabaseDescription.Recording.buildNewRecordingUri(rowId);
+
+                    if (c != null) {
+                        // notify observers that the database changed
+                        c.getContentResolver().notifyChange(uri, null);
+                    }
+                }
+                else {
+                    String error = "";
+                    if (c != null) {
+                        error = c.getString(R.string.insert_failed);
+                    }
+                    throw new SQLException(
+                            error + uri);
+                }
+                break;
+            case REMIXES:
+                // insert the new remix--success yields new remix's row id
+                rowId = dbHelper.getWritableDatabase().insert(
+                        DatabaseDescription.Remix.TABLE_NAME, null, values);
+
+                // if the remix was inserted, create an appropriate Uri;
+                // otherwise, throw an exception
+                if (rowId > 0) { // SQLite row IDs start at 1
+                    newUri = DatabaseDescription.Remix.buildNewRemixUri(rowId);
 
                     if (c != null) {
                         // notify observers that the database changed
@@ -240,6 +282,14 @@ public class PianoRepertoireContentProvider extends ContentProvider {
                 // delete the recording
                 numberOfRowsDeleted = dbHelper.getWritableDatabase().delete(
                         DatabaseDescription.Recording.TABLE_NAME, DatabaseDescription.Recording._ID + "=" + id, selectionArgs);
+                break;
+            case ONE_REMIX:
+                // get from the uri the id of remix to update
+                id = uri.getLastPathSegment();
+
+                // delete the remix
+                numberOfRowsDeleted = dbHelper.getWritableDatabase().delete(
+                        DatabaseDescription.Remix.TABLE_NAME, DatabaseDescription.Remix._ID + "=" + id, selectionArgs);
                 break;
             default:
                 Context c = getContext();

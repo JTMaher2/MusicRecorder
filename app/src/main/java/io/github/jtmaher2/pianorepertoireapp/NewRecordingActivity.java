@@ -23,6 +23,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.telecom.Call;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -33,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Timer;
@@ -50,6 +52,22 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private FileOutputStream os;
     private String filePath;
+    private Uri mPieceUri, mNewRecordingUri;
+    private static final String EXISTING_PIECE_REMS = "existing_piece_rems",
+            EXISTING_PIECE_RECS = "existing_piece_recs",
+            EXISTING_PIECE_REC_NAMES = "existing_piece_rec_names",
+            PIECE_ID = "piece_id";
+
+    private static final String PIECE_URI = "piece_uri",
+            REMIX_URIS = "remix_uris",
+            REMIX_URI = "REMIX_URI",
+            REC_URI = "REC_URI",
+            RECORDING_URIS = "recording_uris";
+
+    private ArrayList<Uri> mRemixUris,
+            mRecUris;
+
+    private int mPieceId;
 
     private final int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
     private final int BytesPerElement = 2; // 2 bytes in 16bit format
@@ -61,6 +79,8 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
     private ConstraintLayout constraintLayout;
     private static final String EXISTING_PIECE_URI = "existing_piece_uri";
     private static final String FOR_EXISTING = "for_existing";
+    private boolean m_RecordingsDirCreated;
+    private File m_RecordingsDir;
 
     @NonNull
     @Override
@@ -87,6 +107,11 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         Intent i = getIntent();
         final boolean forExisting = i.getBooleanExtra(FOR_EXISTING, false);
         final Uri existingPieceUri = i.getParcelableExtra(EXISTING_PIECE_URI);
+        mRemixUris = i.getParcelableArrayListExtra(EXISTING_PIECE_REMS);
+        mRecUris = i.getParcelableArrayListExtra(EXISTING_PIECE_RECS);
+        mPieceId = i.getIntExtra(PIECE_ID, -1);
+        mPieceUri = i.getParcelableExtra(EXISTING_PIECE_URI);
+
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(NewRecordingActivity.this,
                 Manifest.permission.RECORD_AUDIO)
@@ -173,60 +198,61 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         Button startRecBtn = findViewById(R.id.start_recording_btn);
         final SimpleDateFormat sdf = new SimpleDateFormat("mm:ss", Locale.getDefault());
         final Date date = new Date();
-        startRecBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (recorder != null) {
-                    recorder.startRecording();
-                    isRecording = true;
-                    recordingThread = new Thread(new Runnable() {
-                        public void run() {
-                            writeAudioDataToFile(pieceNameTv.getText().toString(), forExisting, existingPieceUri);
-                        }
-                    }, "AudioRecorder Thread");
-                    recordingThread.start();
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            elapsedTime[0]++;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    date.setTime(elapsedTime[0] * 1000);
-                                    timerTv.setText(sdf.format(date));
-                                }
-                            });
-                        }
-                    }, 0L, 1000L);
-                }
+        startRecBtn.setOnClickListener(view -> {
+            if (recorder != null) {
+                recorder.startRecording();
+                isRecording = true;
+                recordingThread = new Thread(() -> writeAudioDataToFile(pieceNameTv.getText().toString(), forExisting, existingPieceUri), "AudioRecorder Thread");
+                recordingThread.start();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        elapsedTime[0]++;
+                        runOnUiThread(() -> {
+                            date.setTime(elapsedTime[0] * 1000);
+                            timerTv.setText(sdf.format(date));
+                        });
+                    }
+                }, 0L, 1000L);
             }
         });
 
         Button stopRecBtn = findViewById(R.id.stop_recording_btn);
-        stopRecBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // stops the recording activity
-                if (null != recorder) {
-                    isRecording = false;
-                    recorder.stop();
-                    recorder.release();
-                    recorder = null;
-                    recordingThread = null;
-                    timer.cancel();
+        stopRecBtn.setOnClickListener(view -> {
+            // stops the recording activity
+            if (null != recorder) {
+                isRecording = false;
+                recorder.stop();
+                recorder.release();
+                recorder = null;
+                recordingThread = null;
+                timer.cancel();
+
+                // go back
+                if (forExisting) {
+                    // existing piece, go to this piece's details activity
+                    Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
+                    mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
+                    details.putExtra(RECORDING_URIS, mRecUris);
+                    details.putExtra(REMIX_URIS, mRemixUris);
+                    details.putExtra(PIECE_ID, mPieceId);
+                    details.putExtra(PIECE_URI, mPieceUri);
+
+                    startActivity(details);
+                } else {
+                    // new piece, go to list
+                    startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
                 }
             }
         });
 
-        Button doneBtn = findViewById(R.id.done_btn);
-        doneBtn.setOnClickListener(new View.OnClickListener() {
+        /*Button doneBtn = findViewById(R.id.done_btn);
+        doneBtn.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
+            public void onClick(View v) {
+
             }
-        });
-
-
+        });*/
     }
 
     @Override
@@ -238,11 +264,7 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                         RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
                 break;
             case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
-                try {
-                    os = new FileOutputStream(filePath);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+                m_RecordingsDirCreated = m_RecordingsDir.mkdirs();
                 break;
         }
     }
@@ -297,13 +319,14 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                 pieceNameTv.getText().toString() + ".pcm");
         contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, 0);
         contentValues.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
+        contentValues.put(DatabaseDescription.Remix.COLUMN_REC_OR_REM, "rec"); // it's a recording
 
         // use Activity's ContentResolver to invoke
         // insert on the PianoRepertoireRecordingsContentProvider
-        Uri newRecordingUri = getContentResolver().insert(
+        mNewRecordingUri = getContentResolver().insert(
                 DatabaseDescription.Recording.CONTENT_URI, contentValues);
 
-        if (newRecordingUri != null) {
+        if (mNewRecordingUri != null) {
             Snackbar.make(constraintLayout,
                     R.string.recording_added, Snackbar.LENGTH_LONG).show();
         }
@@ -315,24 +338,45 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
 
     private void writeAudioDataToFile(final String pieceName, boolean forExisting, Uri existingPieceId) {
         // create a directory for this app, if it doesn't already exist
-        File dir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
-        boolean dirExists;
-        if (dir.isDirectory()) {
-            dirExists = true;
+        m_RecordingsDir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
+
+        if (m_RecordingsDir.isDirectory()) {
+            m_RecordingsDirCreated = true; // the "Piano Repertoire" directory has already been created
         } else {
-            dirExists = dir.mkdir();
+            // Here, thisActivity is the current activity
+            if (ContextCompat.checkSelfPermission(NewRecordingActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission is not granted
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(NewRecordingActivity.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // Show an explanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+                    Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
+                } else {
+                    // No explanation needed; request the permission
+                    ActivityCompat.requestPermissions(NewRecordingActivity.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            } else {
+                // Permission has already been granted
+                m_RecordingsDirCreated = m_RecordingsDir.mkdirs();
+            }
         }
-        if (dirExists) {
+
+        if (m_RecordingsDirCreated) {
             // make a new file for this recording in the above directory
             filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceName + ".pcm";
 
             PianoRepertoireDatabaseHelper prdh = new PianoRepertoireDatabaseHelper(getApplicationContext());
-            SQLiteDatabase sqldb = SQLiteDatabase.create(new SQLiteDatabase.CursorFactory() {
-                @Override
-                public Cursor newCursor(SQLiteDatabase sqLiteDatabase, SQLiteCursorDriver sqLiteCursorDriver, String s, SQLiteQuery sqLiteQuery) {
-                    return null;
-                }
-            });
+            SQLiteDatabase sqldb = SQLiteDatabase.create((sqLiteDatabase, sqLiteCursorDriver, s, sqLiteQuery) -> null);
 
             prdh.onCreate(sqldb); // Create the PIECES and RECORDINGS tables if they don't already exist
             long pieceId = savePiece(forExisting, existingPieceId);
@@ -343,33 +387,7 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
             os = null;
 
             try {
-                // Here, thisActivity is the current activity
-                if (ContextCompat.checkSelfPermission(NewRecordingActivity.this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-
-                    // Permission is not granted
-                    // Should we show an explanation?
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(NewRecordingActivity.this,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                        // Show an explanation to the user *asynchronously* -- don't block
-                        // this thread waiting for the user's response! After the user
-                        // sees the explanation, try again to request the permission.
-                        Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // No explanation needed; request the permission
-                        ActivityCompat.requestPermissions(NewRecordingActivity.this,
-                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-
-                        // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                        // app-defined int constant. The callback method gets the
-                        // result of the request.
-                    }
-                } else {
-                    // Permission has already been granted
-                    os = new FileOutputStream(filePath);
-                }
+                os = new FileOutputStream(filePath);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -384,13 +402,16 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                     e.printStackTrace();
                 }
             }
-        }
 
-        try {
-            assert os != null;
-            os.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                if (os != null) {
+                    os.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Error creating recordings directory.", Toast.LENGTH_SHORT).show();
         }
     }
 

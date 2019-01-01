@@ -32,12 +32,24 @@ public class PianoRepertoireDatabaseHelper extends SQLiteOpenHelper {
                         DatabaseDescription.Recording.COLUMN_PIECE_ID + " integer, " +
                         DatabaseDescription.Recording.COLUMN_FILE_NAME + " TEXT, " +
                         DatabaseDescription.Recording.COLUMN_RATING + " integer, " +
-                        DatabaseDescription.Recording.COLUMN_FAVORITE + " integer);";
+                        DatabaseDescription.Recording.COLUMN_FAVORITE + " integer," +
+                        DatabaseDescription.Recording.COLUMN_REC_OR_REM + " TEXT);";
         db.execSQL(CREATE_RECORDINGS_TABLE); // create the recordings table
+
+        // SQL for creating the remixes table
+        final String CREATE_REMIXES_TABLE =
+                "CREATE TABLE " + DatabaseDescription.Remix.TABLE_NAME + "(" +
+                        DatabaseDescription.Remix._ID + " integer primary key, " +
+                        DatabaseDescription.Remix.COLUMN_PIECE_ID + " integer, " +
+                        DatabaseDescription.Remix.COLUMN_FILE_NAME + " TEXT, " +
+                        DatabaseDescription.Remix.COLUMN_RATING + " integer, " +
+                        DatabaseDescription.Remix.COLUMN_FAVORITE + " integer," +
+                        DatabaseDescription.Remix.COLUMN_REC_OR_REM + " TEXT);";
+        db.execSQL(CREATE_REMIXES_TABLE); // create the remixes table
     }
 
     // normally defines how to upgrade the database when the schema changes
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion,
-                          int newVersion) { }
+                          int newVersion) {    }
 }

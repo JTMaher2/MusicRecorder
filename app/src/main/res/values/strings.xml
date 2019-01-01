@@ -10,6 +10,8 @@
     <string name="piece_not_added">Piece Not Added</string>
     <string name="recording_added">Recording Added</string>
     <string name="recording_not_added">Recording Not Added</string>
+    <string name="remix_added">Remix Added</string>
+    <string name="remix_not_added">Remix Not Added</string>
     <string name="done">Done</string>
     <string name="name_with_colon">Name:</string>
     <string name="name">Name</string>
@@ -26,4 +28,11 @@
     <string name="timer">Timer</string>
     <string name="demo">Demo</string>
     <string name="new_recording">New Recording</string>
+    <string name="remix">Remix</string>
+    <string name="recording_start">%1$s Start</string>
+    <string name="recording_end">%1$s End</string>
+    <string name="remix_deleted">Remix Deleted</string>
+    <string name="remix_not_deleted">Remix Not Deleted</string>
+    <string name="recording_deleted">Recording Deleted</string>
+    <string name="recording_not_deleted">Recording Not Deleted</string>
 </resources>

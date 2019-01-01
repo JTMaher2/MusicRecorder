@@ -17,7 +17,9 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.res.ResourcesCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -37,38 +39,43 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
+import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireContentProvider;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
 
-public class DetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
-                                                                    AdapterView.OnItemSelectedListener {
+public class RemixActivityDetails extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+        AdapterView.OnItemSelectedListener {
     private static final int LOADER_TYPE_PIECE = 0;
-    private static final int LOADER_TYPE_RECORDING = 1;
+    private static final int LOADER_TYPE_REMIX = 1000;
+    private static final int LOADER_TYPE_RECORDING = 2000;
+
     // keys for storing a piece's/recording's Uri in a Bundle passed to the activity
     private static final String PIECE_URI = "piece_uri",
-            RECORDING_URIS = "recording_uris",
-            RECORDING_URI = "recording_uri",
-            REMIX_URIS = "remix_uris";
+            REMIX_URIS = "remix_uris",
+            REMIX_URI = "REMIX_URI",
+            REC_URI = "REC_URI",
+            PIECE_ID = "piece_id",
+            RECORDING_URIS = "recording_uris";
     private EditText mNameTv, mComposerTv, mNotesTv;
     private RatingBar mRatingBar;
-    private Uri pieceUri;
+    private Uri mPieceUri;
 
-    private static final int PIECE_LOADER = 0; // identifies the Loader
+    private static final int PIECE_LOADER = 0, // identifies the Loader
+        REC_LOADER = 1;
 
-    private Spinner mRecsSpinner;
-    private CustomAdapter mRecsSpinnerAdapter;
-    private ArrayList<String> mRecsSpinnerElems,
-                                mRemsSpinnerElems;
-    private ArrayList<Uri> mRecordingUris,
-            mRemixUris;
-    private ArrayList<Float> mRecRatings;
-    private ArrayList<Float> mRecFavs;
+    private Spinner mRemixesSpinner;
+    private CustomAdapter mRemixesSpinnerAdapter;
+    private ArrayList<String> mRemixesSpinnerElems,
+                                mRecordingsSpinnerElems;
+    private ArrayList<Uri> mRemixUris,
+                            mRecUris;
+    private ArrayList<Float> mRemixRatings;
+    private ArrayList<Float> mRemixFavs;
     private boolean mRatingChanged, mFavoriteChanged;
     private static final String EXISTING_PIECE_REMS = "existing_piece_rems",
-                                EXISTING_PIECE_RECS = "existing_piece_recs",
-                                EXISTING_PIECE_URI = "existing_piece_uri",
-                                PIECE_ID = "piece_id";
+            EXISTING_PIECE_URI = "existing_piece_uri",
+            EXISTING_PIECE_RECS = "existing_piece_recs",
+            EXISTING_PIECE_REC_NAMES = "existing_piece_rec_names";
     private static final String FOR_EXISTING = "for_existing";
-    private Button mEditBtn;
     private ContentValues mUpdateValues;
     private CustomRatingBar mFavoriteStar;
     private String mSelectedItem;
@@ -80,14 +87,11 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             mNameTv.setEnabled(false);
             mComposerTv.setEnabled(false);
             mNotesTv.setEnabled(false);
-            mEditBtn.setText(R.string.edit);
-            mEditBtn.setBackgroundColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_orange_light, null));
             mUpdateValues.clear();
             mUpdateValues.put(DatabaseDescription.Piece.COLUMN_NAME, mNameTv.getText().toString());
             mUpdateValues.put(DatabaseDescription.Piece.COLUMN_COMPOSER, mComposerTv.getText().toString());
             mUpdateValues.put(DatabaseDescription.Piece.COLUMN_NOTES, mNotesTv.getText().toString());
-            getContentResolver().update(pieceUri, mUpdateValues, null, null);
-            mEditBtn.setOnClickListener(editBtnClickListener);
+            getContentResolver().update(mPieceUri, mUpdateValues, null, null);
         }
     };
     private final OnClickListener editBtnClickListener = new OnClickListener(){
@@ -96,31 +100,23 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             mNameTv.setEnabled(true);
             mComposerTv.setEnabled(true);
             mNotesTv.setEnabled(true);
-            mEditBtn.setText(R.string.done);
-            mEditBtn.setBackgroundColor(Color.BLUE);
-            mEditBtn.setTextColor(Color.WHITE);
-            mEditBtn.setOnClickListener(editBtnDoneListener);
         }
     };
 
     private final OnClickListener remixBtnClickListener = new OnClickListener(){
-      @Override
-      public void onClick(View view) {
-          Intent i = new Intent(getApplicationContext(), RemixActivityDetails.class);
-          i.putParcelableArrayListExtra(EXISTING_PIECE_RECS, mRecordingUris);
-          i.putExtra(PIECE_ID, mPieceId);
-          i.putParcelableArrayListExtra(EXISTING_PIECE_REMS, mRemixUris);
-          i.putExtra(EXISTING_PIECE_URI, pieceUri);
-          startActivity(i);
-      }
+        @Override
+        public void onClick(View view) {
+            Intent i = new Intent(getApplicationContext(), RemixActivity.class);
+            i.putStringArrayListExtra(EXISTING_PIECE_REMS, mRemixesSpinnerElems);
+            startActivity(i);
+        }
     };
 
     // play a selected recording
     void playRec()
     {
         byte[] byteData = null;
-        File file = null;
-        file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()));
+        File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()));
 
         // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
@@ -167,67 +163,75 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     }
 
     @Override
+    public void onBackPressed() {
+        // go back to details activity
+        Intent i = new Intent(getApplicationContext(), DetailsActivity.class);
+        i.putExtra(RECORDING_URIS, mRecUris);
+        i.putExtra(REMIX_URIS, mRemixUris);
+        i.putExtra(PIECE_ID, mPieceId);
+        i.putExtra(PIECE_URI, mPieceUri);
+        startActivity(i);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_details);
-
+        setContentView(R.layout.activity_remix_details);
+        ConstraintLayout constraintLayout = findViewById(R.id.rem_det_constraint_layout);
         Intent i = getIntent();
         mRatingChanged = false;
         mFavoriteChanged = false;
         mUpdateValues = new ContentValues();
-        pieceUri = i.getParcelableExtra(PIECE_URI);
         // Uris of selected piece/recording
-        mRecordingUris = i.getParcelableArrayListExtra(RECORDING_URIS);
-        mRemixUris = i.getParcelableArrayListExtra(REMIX_URIS);
+        mRemixUris = i.getParcelableArrayListExtra(EXISTING_PIECE_REMS);
+        mRecUris = i.getParcelableArrayListExtra(EXISTING_PIECE_RECS);
         mPieceId = i.getIntExtra(PIECE_ID, -1);
-        Button newRecBtn = findViewById(R.id.new_rec_btn_details);
-        mEditBtn = findViewById(R.id.edit_btn);
-        Button remixBtn = findViewById(R.id.remix_btn);
+        mPieceUri = i.getParcelableExtra(EXISTING_PIECE_URI);
+        Button newRemixBtn = findViewById(R.id.new_rec_btn_details);
         Button playBtn = findViewById(R.id.play_btn);
+
         playBtn.setOnClickListener((view)-> playRec());
-        ConstraintLayout constraintLayout = findViewById(R.id.details_constraint_layout);
+
         AdapterView.OnItemSelectedListener onItemSelectedListener = this;
-        Button delRecBtn = findViewById(R.id.del_rec_btn);
-        delRecBtn.setOnClickListener(new View.OnClickListener(){
+
+        Button delRemBtn = findViewById(R.id.delete_remix_btn);
+        delRemBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                String remixName = mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition());
+                String remixName = mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition());
                 File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + remixName);
                 boolean deleted = file.delete();
                 if (deleted) {
-                    int dbDeleted = getContentResolver().delete(DatabaseDescription.Recording.buildRecordingUriForRecWithName(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), remixName), null, null);
+                    int dbDeleted = getContentResolver().delete(DatabaseDescription.Remix.buildRemixUriForRemixWithName(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), remixName), null, null);
 
                     // remove deleted remix from spinner
-                    mRecsSpinnerElems.remove(remixName);
-                    Object[] elemsArray = mRecsSpinnerElems.toArray();
+                    mRemixesSpinnerElems.remove(remixName);
+                    Object[] elemsArray = mRemixesSpinnerElems.toArray();
                     if (elemsArray != null) {
-                        mRecsSpinnerAdapter = new CustomAdapter(getApplicationContext(), Arrays.copyOf(elemsArray, elemsArray.length, String[].class));
+                        mRemixesSpinnerAdapter = new CustomAdapter(getApplicationContext(), Arrays.copyOf(elemsArray, elemsArray.length, String[].class));
                     }
-                    mRecsSpinner.setAdapter(mRecsSpinnerAdapter);
-                    mRecsSpinner.setOnItemSelectedListener(onItemSelectedListener);
+                    mRemixesSpinner.setAdapter(mRemixesSpinnerAdapter);
+                    mRemixesSpinner.setOnItemSelectedListener(onItemSelectedListener);
 
                     if (dbDeleted > 0) {
                         Snackbar.make(constraintLayout,
-                                R.string.recording_deleted, Snackbar.LENGTH_LONG).show();
+                                R.string.remix_deleted, Snackbar.LENGTH_LONG).show();
                     } else {
                         Snackbar.make(constraintLayout,
-                                R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
+                                R.string.remix_not_deleted, Snackbar.LENGTH_LONG).show();
                     }
                 } else {
                     Snackbar.make(constraintLayout,
-                            R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
+                            R.string.remix_not_deleted, Snackbar.LENGTH_LONG).show();
                 }
             }
         });
-        mNameTv = findViewById(R.id.detailsNameTextView);
-        mComposerTv = findViewById(R.id.detailsComposerTextView);
-        mNotesTv = findViewById(R.id.detailsNotesTextView);
         mRatingBar = findViewById(R.id.detailsRatingBar);
         mRatingBar.setOnRatingBarChangeListener((ratingBar, v, b) -> {
             ContentValues contentValues = new ContentValues();
             contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, v);
 
-            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()) + "'", null, null, null);
+            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
 
             if (c != null) {
                 c.moveToFirst();
@@ -252,7 +256,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                     vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
                     rb.setRating(1.0f);
                 }
-                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()) + "'", null, null, null);
+                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
 
                 if (c != null) {
                     c.moveToFirst();
@@ -268,34 +272,44 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
             return mFavoriteChanged;
         });
-        mRecsSpinner = findViewById(R.id.recs_spinner);
+        mRemixesSpinner = findViewById(R.id.recs_spinner);
 
-        mRecRatings = new ArrayList<>();
-        mRecFavs = new ArrayList<>();
-        mRecsSpinnerElems = new ArrayList<>();
-        mRemsSpinnerElems = new ArrayList<>();
+        mRemixRatings = new ArrayList<>();
+        mRemixFavs = new ArrayList<>();
+        mRemixesSpinnerElems = new ArrayList<>();
 
-        newRecBtn.setOnClickListener(view -> {
-            Intent i1 = new Intent(getApplicationContext(), NewRecordingActivity.class);
-            i1.putExtra(FOR_EXISTING, true);
-            i1.putExtra(EXISTING_PIECE_URI, pieceUri);
-            i1.putParcelableArrayListExtra(EXISTING_PIECE_RECS, mRecordingUris);
+        newRemixBtn.setOnClickListener(view -> {
+            Intent i1 = new Intent(getApplicationContext(), RemixActivity.class);
             i1.putExtra(PIECE_ID, mPieceId);
+            i1.putStringArrayListExtra(EXISTING_PIECE_REC_NAMES, mRecordingsSpinnerElems);
+            i1.putParcelableArrayListExtra(EXISTING_PIECE_RECS, mRecUris);
             i1.putParcelableArrayListExtra(EXISTING_PIECE_REMS, mRemixUris);
+            i1.putExtra(EXISTING_PIECE_URI, mPieceUri);
             startActivity(i1);
         });
 
-        mEditBtn.setOnClickListener(editBtnClickListener);
-        remixBtn.setOnClickListener(remixBtnClickListener);
+        LoaderManager lm = LoaderManager.getInstance(this);
 
-        // load piece
-        LoaderManager.getInstance(this).initLoader(LOADER_TYPE_PIECE, null, this);
+        // attempt to load recordings
+        if (mRecUris != null) {
+            //LoaderManager.getInstance(this).initLoader(LOADER_TYPE_PIECE, null, this);
 
-        // load recordings
-        for (int l = 0; l < mRecordingUris.size(); l++) {
-            Bundle b = new Bundle();
-            b.putParcelable(RECORDING_URI, mRecordingUris.get(l));
-            LoaderManager.getInstance(this).initLoader(l + LOADER_TYPE_RECORDING, b, this);
+            for (int l = 0; l < mRecUris.size(); l++) {
+                Bundle b = new Bundle();
+                b.putParcelable(REC_URI, mRecUris.get(l));
+                lm.initLoader(l + LOADER_TYPE_RECORDING, b, this);
+            }
+        }
+
+        // attempt to load remixes
+        if (mRemixUris != null) {
+            //LoaderManager.getInstance(this).initLoader(LOADER_TYPE_PIECE, null, this);
+
+            for (int l = 0; l < mRemixUris.size(); l++) {
+                Bundle b = new Bundle();
+                b.putParcelable(REMIX_URI, mRemixUris.get(l));
+                lm.initLoader(l + LOADER_TYPE_REMIX, b, this);
+            }
         }
     }
 
@@ -310,21 +324,33 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         switch (id) {
             case PIECE_LOADER:
                 cursorLoader = new CursorLoader(this,
-                        pieceUri, // Uri of piece to display
+                        mPieceUri, // Uri of piece to display
                         null, // null projection returns all columns
                         null, // null selection returns all rows
                         null, // no selection arguments
                         null); // sort order
 
                 break;
-            default: // recording loader
-                Uri recUri = args.getParcelable(RECORDING_URI);
-                cursorLoader = new CursorLoader(this,
-                        recUri == null ? new Uri.Builder().build() : recUri, // Uri of recording to display
-                        null, // null projection returns all columns
-                        null, // null selection returns all rows
-                        null, // no selection arguments
-                        null); // sort order
+            default: // recording or remix loader
+                if (args.get("REC_URI") != null) {
+                    // it's a recording
+                    Uri recUri = args.getParcelable(REC_URI);
+                    cursorLoader = new CursorLoader(this,
+                            recUri == null ? new Uri.Builder().build() : recUri, // Uri of recording to display
+                            null, // null projection returns all columns
+                            null, // null selection returns all rows
+                            null, // no selection arguments
+                            null); // sort order
+                } else {
+                    // it's a remix
+                    Uri remUri = args.getParcelable(REMIX_URI);
+                    cursorLoader = new CursorLoader(this,
+                            remUri == null ? new Uri.Builder().build() : remUri, // Uri of remix to display
+                            null, // null projection returns all columns
+                            null, // null selection returns all rows
+                            null, // no selection arguments
+                            null); // sort order
+                }
 
                 break;
         }
@@ -337,7 +363,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
             // get the column index for each data item
-            if (loader.getId() == LOADER_TYPE_PIECE)
+            int loaderId = loader.getId();
+            if (loaderId == LOADER_TYPE_PIECE)
             {
                 int nameIndex = data.getColumnIndex(DatabaseDescription.Piece.COLUMN_NAME);
                 int composerIndex = data.getColumnIndex(DatabaseDescription.Piece.COLUMN_COMPOSER);
@@ -347,22 +374,23 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 mNameTv.setText(data.getString(nameIndex));
                 mComposerTv.setText(data.getString(composerIndex));
                 mNotesTv.setText(data.getString(notesIndex));
-            } else {
+            } else{
                 String recOrRem = data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_REC_OR_REM));
-                if (recOrRem.equals("rec")) { // LOADER_TYPE_REMIX
+                if (recOrRem.equals("rem")) { // LOADER_TYPE_REMIX
                     if (mSelectedItem == null || data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)).equals(mSelectedItem)) {
-                        if (mRecsSpinnerElems.size() < mRecordingUris.size()) {
-                            mRecsSpinnerElems.add(data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)));
+                        if (mRemixesSpinnerElems.size() < mRemixUris.size()) {
+                            mRemixesSpinnerElems.add(data.getString(data.getColumnIndex(DatabaseDescription.Remix.COLUMN_FILE_NAME)));
                         }
 
-                        if (mRecsSpinner.getAdapter() == null && mRecsSpinnerElems.size() == mRecordingUris.size()) {
+                        if (mRemixesSpinner.getAdapter() == null && mRemixesSpinnerElems.size() == mRemixUris.size())
+                        {
                             // if this was the last spinner element to be added to the list,
                             // create adapter and add it to the spinner
-                            Object[] elemsArray = mRecsSpinnerElems.toArray();
+                            Object[] elemsArray = mRemixesSpinnerElems.toArray();
                             if (elemsArray != null)
-                                mRecsSpinnerAdapter = new CustomAdapter(getApplicationContext(), Arrays.copyOf(elemsArray, elemsArray.length, String[].class));
-                            mRecsSpinner.setAdapter(mRecsSpinnerAdapter);
-                            mRecsSpinner.setOnItemSelectedListener(this);
+                                mRemixesSpinnerAdapter = new CustomAdapter(getApplicationContext(), Arrays.copyOf(elemsArray, elemsArray.length, String[].class));
+                            mRemixesSpinner.setAdapter(mRemixesSpinnerAdapter);
+                            mRemixesSpinner.setOnItemSelectedListener(this);
                         }
                         int ratingIndex = data.getColumnIndex(DatabaseDescription.Recording.COLUMN_RATING);
                         int favoriteIndex = data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FAVORITE);
@@ -371,24 +399,32 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                         if (mRatingChanged) { // rating was changed
                             float newRating = Float.parseFloat(data.getString(ratingIndex));
                             mRatingBar.setRating(newRating);
-                            mRecRatings.set(mRecsSpinner.getSelectedItemPosition(), newRating);
+                            mRemixRatings.set(mRemixesSpinner.getSelectedItemPosition(), newRating);
                             mRatingChanged = false;
                         } else if (mFavoriteChanged) { // favorite was changed
                             float newFav = data.getFloat(favoriteIndex);
                             mFavoriteStar.setRating(newFav);
-                            mRecFavs.set(mRecsSpinner.getSelectedItemPosition(), newFav);
+                            mRemixFavs.set(mRemixesSpinner.getSelectedItemPosition(), newFav);
                             mFavoriteChanged = false;
                         } else { // nothing was changed
-                            if (mRecRatings.size() < mRecsSpinnerElems.size()) {
-                                mRecRatings.add(data.getFloat(ratingIndex));
+                            if (mRemixRatings.size() < mRemixesSpinnerElems.size()) {
+                                mRemixRatings.add(data.getFloat(ratingIndex));
                             }
-                            if (mRecFavs.size() < mRecsSpinnerElems.size()) {
-                                mRecFavs.add(data.getFloat(favoriteIndex));
+                            if (mRemixFavs.size() < mRemixesSpinnerElems.size()) {
+                                mRemixFavs.add(data.getFloat(favoriteIndex));
                             }
                         }
                     }
-                } else { // LOADER_TYPE_REMIX
-                    mRemsSpinnerElems.add(data.getString(data.getColumnIndex(DatabaseDescription.Remix.COLUMN_FILE_NAME)));
+                } else { // LOADER_TYPE_RECORDING
+                    if (mSelectedItem == null || data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)).equals(mSelectedItem)) {
+                        if (mRecordingsSpinnerElems == null) {
+                            mRecordingsSpinnerElems = new ArrayList<>();
+                        }
+
+                        if (mRecordingsSpinnerElems.size() < mRecUris.size()) {
+                            mRecordingsSpinnerElems.add(data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)));
+                        }
+                    }
                 }
             }
         }
@@ -396,22 +432,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-
     }
 
     public void onItemSelected(AdapterView<?> parent, View view,
                                int pos, long id) {
-        mRatingBar.setRating(mRecRatings.get(pos));
-        mFavoriteStar.setRating(mRecFavs.get(pos));
-        mSelectedItem = mRecsSpinnerElems.get(pos);
+        mRatingBar.setRating(mRemixRatings.get(pos));
+        mFavoriteStar.setRating(mRemixFavs.get(pos));
+        mSelectedItem = mRemixesSpinnerElems.get(pos);
     }
 
     public void onNothingSelected(AdapterView<?> parent) {
         // Another interface callback
-    }
-
-    @Override
-    public void onBackPressed() {
-        startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
     }
 }

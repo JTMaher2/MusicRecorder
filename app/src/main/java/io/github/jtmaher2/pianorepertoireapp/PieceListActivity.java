@@ -1,5 +1,6 @@
 package io.github.jtmaher2.pianorepertoireapp;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -54,20 +55,33 @@ public class PieceListActivity extends AppCompatActivity {
                         "/PianoRepertoire/")
                 .list();
         ArrayList<String> firstRecNames = new ArrayList<>();
-        for (String rec : allRecs) {
-            if (isFirstRec(rec)) {
-                firstRecNames.add(rec);
+        if (allRecs != null) {
+            for (String rec : allRecs) {
+                if (isFirstRec(rec)) {
+                    firstRecNames.add(rec);
+                }
             }
         }
+        ArrayList<Uri> pieceUris = DatabaseDescription.Piece.buildPieceUris(new PianoRepertoireDatabaseHelper(this).getReadableDatabase());
+        ArrayList<String> pieceNames = new ArrayList<>();
+        ContentResolver contentResolver = getContentResolver();
+        Cursor c;
+        for (int i = 0; i < pieceUris.size(); i++) {
+            c = contentResolver.query(pieceUris.get(i), new String[]{DatabaseDescription.Piece.COLUMN_NAME}, null, null, null);
+            if (c != null && c.getCount() > 0) {
+                c.moveToFirst();
+                pieceNames.add(c.getString(c.getColumnIndex(DatabaseDescription.Piece.COLUMN_NAME)));
+            }
+            if (c != null) {
+                c.close();
+            }
+        }
+
+
         mRecyclerView.setAdapter(new MyPiecesRecyclerViewAdapter(
-                Arrays.copyOf(firstRecNames.toArray(), firstRecNames.size(), String[].class), getApplicationContext()));
+                Arrays.copyOf(/*firstRec*/pieceNames.toArray(), /*firstRec*/pieceNames.size(), String[].class), getApplicationContext()));
 
         FloatingActionButton fab = findViewById(R.id.new_rec_btn);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), NewRecordingActivity.class));
-            }
-        });
+        fab.setOnClickListener(view -> startActivity(new Intent(getApplicationContext(), NewRecordingActivity.class)));
     }
 }

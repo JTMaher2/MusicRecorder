@@ -35,6 +35,22 @@ public class DatabaseDescription {
         public static Uri buildPieceUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
+
+        // creates Uris for all pieces
+        public static ArrayList<Uri> buildPieceUris(SQLiteDatabase db) {
+            // find IDs of all pieces
+            Cursor pieces = db.query(DatabaseDescription.Piece.TABLE_NAME, new String[]{Piece._ID}, null, null, null, null, null, null); // select piece(s)
+            List<Integer> ids = new ArrayList<>();
+            while (pieces.moveToNext()) {
+                ids.add(pieces.getInt(0));
+            }
+            pieces.close();
+            ArrayList<Uri> uris = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                uris.add(ContentUris.withAppendedId(CONTENT_URI, ids.get(i)));
+            }
+            return uris;
+        }
     }
 
     // nested class defines contents of the recordings table-
@@ -50,6 +66,7 @@ public class DatabaseDescription {
         public static final String COLUMN_FILE_NAME = "file_name";
         public static final String COLUMN_RATING = "rating";
         public static final String COLUMN_FAVORITE = "favorite";
+        public static final String COLUMN_REC_OR_REM = "rec_or_rem";
 
         // creates a Uri for a specific recording
         static Uri buildNewRecordingUri(long id) {
@@ -76,6 +93,14 @@ public class DatabaseDescription {
         public static ArrayList<Uri> buildDistinctRecordingUris(SQLiteDatabase db) {
             Cursor recs = db.query(DatabaseDescription.Recording.TABLE_NAME, new String[]{Recording._ID}, DatabaseDescription.Recording._ID + " IN (SELECT DISTINCT " + DatabaseDescription.Recording.COLUMN_PIECE_ID +
                     " FROM " + DatabaseDescription.Recording.TABLE_NAME + ")", null, null, null, null, null); // select recording(s)
+
+            /*Cursor recs = db.rawQuery("WITH temp AS" +
+                    "(" +
+                    "SELECT " + DatabaseDescription.Recording._ID + "," +
+                    "ROW_NUMBER() OVER (PARTITION BY " + Recording.COLUMN_PIECE_ID + " ORDER BY " + Recording.COLUMN_PIECE_ID + ") AS rn" +
+                    "FROM " + Recording.TABLE_NAME + ")" +
+                    "SELECT " + Recording._ID + " FROM temp WHERE rn=1;", null);*/
+
             List<Integer> ids = new ArrayList<>();
             while (recs.moveToNext()) {
                 ids.add(recs.getInt(0));
@@ -86,6 +111,107 @@ public class DatabaseDescription {
                 uris.add(ContentUris.withAppendedId(CONTENT_URI, ids.get(i)));
             }
             return uris;
+        }
+
+        // creates Uris for all recordings for a particular piece
+        public static ArrayList<Uri> buildAllRecordingUrisForSpecificPiece(SQLiteDatabase db, int pieceId) {
+            Cursor recs = db.query(DatabaseDescription.Recording.TABLE_NAME, new String[]{Recording._ID}, Recording.COLUMN_PIECE_ID + " = " + pieceId + ")", null, null, null, null, null); // select recording(s)
+            List<Integer> ids = new ArrayList<>();
+            while (recs.moveToNext()) {
+                ids.add(recs.getInt(0));
+            }
+            recs.close();
+            ArrayList<Uri> uris = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                uris.add(ContentUris.withAppendedId(CONTENT_URI, ids.get(i)));
+            }
+            return uris;
+        }
+
+        // creates Uri for a recording with a specific name
+        public static Uri buildRecordingUriForRecWithName(SQLiteDatabase db, String recName) {
+            Cursor recs = db.query(DatabaseDescription.Recording.TABLE_NAME, new String[]{Recording._ID}, Recording.COLUMN_FILE_NAME + " = '" + recName + "'", null, null, null, null, null); // select recording(s)
+            recs.moveToNext();
+            int id = recs.getInt(0);
+            recs.close();
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+    }
+
+    // nested class defines contents of the remixes table
+    public static final class Remix implements BaseColumns {
+        static final String TABLE_NAME = "remixes"; // table's name
+
+        // Uri for the remixes table
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(TABLE_NAME).build();
+
+        // column names for remixes table's columns
+        public static final String COLUMN_PIECE_ID = "piece_id";
+        public static final String COLUMN_FILE_NAME = "file_name";
+        public static final String COLUMN_RATING = "rating";
+        public static final String COLUMN_FAVORITE = "favorite";
+        public static final String COLUMN_REC_OR_REM = "rec_or_rem";
+
+        // creates a Uri for a specific remix
+        static Uri buildNewRemixUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        // creates a Uri for a specific remix
+        public static ArrayList<Uri> buildRemixUris(SQLiteDatabase db, long id) {
+            // find IDs of all remixes that belong to a piece
+            Cursor rems = db.query(DatabaseDescription.Remix.TABLE_NAME, new String[]{Remix._ID}, Remix.COLUMN_PIECE_ID + " = " + id, null, null, null, null, null); // select remix(es)
+            List<Integer> ids = new ArrayList<>();
+            while (rems.moveToNext()) {
+                ids.add(rems.getInt(0));
+            }
+            rems.close();
+            ArrayList<Uri> uris = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                uris.add(ContentUris.withAppendedId(CONTENT_URI, ids.get(i)));
+            }
+            return uris;
+        }
+
+        // creates Uris for all remixes that are the first for a particular piece
+        public static ArrayList<Uri> buildDistinctRemixUris(SQLiteDatabase db) {
+            Cursor rems = db.query(DatabaseDescription.Remix.TABLE_NAME, new String[]{Remix._ID}, DatabaseDescription.Remix._ID + " IN (SELECT DISTINCT " + DatabaseDescription.Remix.COLUMN_PIECE_ID +
+                    " FROM " + DatabaseDescription.Remix.TABLE_NAME + ")", null, null, null, null, null); // select remix(es)
+            List<Integer> ids = new ArrayList<>();
+            while (rems.moveToNext()) {
+                ids.add(rems.getInt(0));
+            }
+            rems.close();
+            ArrayList<Uri> uris = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                uris.add(ContentUris.withAppendedId(CONTENT_URI, ids.get(i)));
+            }
+            return uris;
+        }
+
+        // creates Uris for all remixes for a particular piece
+        public static ArrayList<Uri> buildAllRemixUrisForSpecificPiece(SQLiteDatabase db, int pieceId) {
+            Cursor rems = db.query(DatabaseDescription.Remix.TABLE_NAME, new String[]{Remix._ID}, Remix.COLUMN_PIECE_ID + " = " + pieceId + ")", null, null, null, null, null); // select remix(es)
+            List<Integer> ids = new ArrayList<>();
+            while (rems.moveToNext()) {
+                ids.add(rems.getInt(0));
+            }
+            rems.close();
+            ArrayList<Uri> uris = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                uris.add(ContentUris.withAppendedId(CONTENT_URI, ids.get(i)));
+            }
+            return uris;
+        }
+
+        // creates Uri for a remix with a specific name
+        public static Uri buildRemixUriForRemixWithName(SQLiteDatabase db, String remixName) {
+            Cursor rems = db.query(DatabaseDescription.Remix.TABLE_NAME, new String[]{Remix._ID}, Remix.COLUMN_FILE_NAME + " = '" + remixName + "'", null, null, null, null, null); // select remix(es)
+            rems.moveToNext();
+            int id = rems.getInt(0);
+            rems.close();
+            return ContentUris.withAppendedId(CONTENT_URI, id);
         }
     }
 }

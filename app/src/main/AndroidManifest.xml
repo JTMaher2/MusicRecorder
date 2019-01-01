@@ -4,16 +4,17 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="@xml/files_to_backup"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:fullBackupContent="@xml/files_to_backup">
-        <activity android:name=".NewRecordingActivity"/>
+        android:theme="@style/AppTheme">
+        <activity android:name=".NewRecordingActivity" />
         <activity
             android:name=".PieceListActivity"
             android:label="@string/title_activity_piece_list"
@@ -26,12 +27,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".DetailsActivity" />
+
         <provider
             android:name=".data.PianoRepertoireContentProvider"
             android:authorities="io.github.jtmaher2.pianorepertoireapp.data"
             android:enabled="true"
-            android:exported="false" >
-        </provider>
+            android:exported="false" />
+
+        <activity android:name=".RemixActivity" />
+        <activity android:name=".RemixActivityDetails"/>
     </application>
 
 </manifest>
