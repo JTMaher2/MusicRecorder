@@ -225,21 +225,32 @@ public class PianoRepertoireContentProvider extends ContentProvider {
                 // get from the uri the id of piece to update
                 String id = uri.getLastPathSegment();
 
-                // update the piece
+                // update a piece
                 numberOfRowsUpdated = dbHelper.getWritableDatabase().update(
                         DatabaseDescription.Piece.TABLE_NAME, values, DatabaseDescription.Piece._ID + "=" + id,
                         selectionArgs);
                 break;
             case ONE_RECORDING:
-                // update the recording
+                // update a recording
                 numberOfRowsUpdated = dbHelper.getWritableDatabase().update(
                         DatabaseDescription.Recording.TABLE_NAME, values, DatabaseDescription.Recording._ID + "=?",
                         selectionArgs);
                 break;
+            case ONE_REMIX:
+                // update a remix
+                numberOfRowsUpdated = dbHelper.getWritableDatabase().update(
+                        DatabaseDescription.Remix.TABLE_NAME, values, DatabaseDescription.Remix._ID + "=?",
+                        selectionArgs);
+                break;
             case RECORDINGS:
-                // insert the new recording--success yields new recording's row id
+                // update recordings
                 numberOfRowsUpdated = dbHelper.getWritableDatabase().update(
                         DatabaseDescription.Recording.TABLE_NAME, values, DatabaseDescription.Recording._ID + "=?", selectionArgs);
+                break;
+            case REMIXES:
+                // update remixes
+                numberOfRowsUpdated = dbHelper.getWritableDatabase().update(
+                        DatabaseDescription.Remix.TABLE_NAME, values, DatabaseDescription.Remix._ID + "=?", selectionArgs);
                 break;
             default:
                 Context c = getContext();

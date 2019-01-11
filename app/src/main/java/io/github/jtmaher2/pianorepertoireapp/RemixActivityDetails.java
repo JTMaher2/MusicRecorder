@@ -20,6 +20,7 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -54,7 +55,8 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
             REMIX_URI = "REMIX_URI",
             REC_URI = "REC_URI",
             PIECE_ID = "piece_id",
-            RECORDING_URIS = "recording_uris";
+            RECORDING_URIS = "recording_uris",
+            TAG = "RemixActivityDetails";
     private EditText mNameTv, mComposerTv, mNotesTv;
     private RatingBar mRatingBar;
     private Uri mPieceUri;
@@ -112,15 +114,66 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         }
     };
 
+    private DataInputStream mDis;
+    private byte[] mByteData;
+    private int mBufSize;
+    private AudioTrack mAt;
+    Thread m_playThread;
+    private BufferedInputStream mBis;
+    private FileInputStream mFin;
+    private Button mPlayBtn;
+
+    Runnable m_playGenerator = new Runnable()
+    {
+        public void run()
+        {
+            Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+
+            int i;
+
+            try {
+                while ((i = mDis.read(mByteData, 0, mBufSize)) > -1)
+                    mAt.write(mByteData, 0, i);
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+
+            mAt.stop(); // stop after last buffer is played
+            mAt.release();
+            try {
+                mDis.close();
+                mBis.close();
+                mFin.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    // stop playing a recording
+    void stopPlaying()
+    {
+        //mAudioTrack.flush();
+        //mAudioTrack.stop();
+        //mAudioTrack.release();
+        mAt.pause();
+        mAt.flush();
+
+        mPlayBtn.setText("Play");
+        mPlayBtn.setOnClickListener((view) -> playRec());
+    }
+
     // play a selected recording
     void playRec()
     {
+        mPlayBtn.setText("Stop");
+        mPlayBtn.setOnClickListener((view)-> stopPlaying());
         byte[] byteData = null;
         File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()));
 
         // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
-        AudioTrack at = new AudioTrack.Builder()
+        mAt = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -135,28 +188,23 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
                 .build();
 
         int i = 0;
-        int bufSize = (int) file.length();
-        byteData = new byte[bufSize];
+        mBufSize = (int) file.length();
+        mByteData = new byte[mBufSize];
 
         try
         {
-            FileInputStream in = new FileInputStream( file );
-            BufferedInputStream bis = new BufferedInputStream(in, 8000);
-            DataInputStream dis = new DataInputStream(bis);
+            mFin = new FileInputStream( file );
+            mBis = new BufferedInputStream(mFin, 8000);
+            mDis = new DataInputStream(mBis);
 
                 /*while (dis.available() > 0)
                 {
                     byteData[i] = dis.readByte();
                     i++;
                 }*/
-            at.play();
-            while ((i = dis.read(byteData, 0, bufSize)) > -1)
-                at.write(byteData, 0, i);
-            at.stop();
-            at.release();
-            dis.close();
-            bis.close();
-            in.close();
+            mAt.play();
+            m_playThread = new Thread(m_playGenerator);
+            m_playThread.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -187,10 +235,10 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         mRecUris = i.getParcelableArrayListExtra(EXISTING_PIECE_RECS);
         mPieceId = i.getIntExtra(PIECE_ID, -1);
         mPieceUri = i.getParcelableExtra(EXISTING_PIECE_URI);
-        Button newRemixBtn = findViewById(R.id.new_rec_btn_details);
-        Button playBtn = findViewById(R.id.play_btn);
+        Button newRemixBtn = findViewById(R.id.new_rem_btn_details);
+        mPlayBtn = findViewById(R.id.play_btn);
 
-        playBtn.setOnClickListener((view)-> playRec());
+        mPlayBtn.setOnClickListener((view)-> playRec());
 
         AdapterView.OnItemSelectedListener onItemSelectedListener = this;
 
@@ -229,14 +277,14 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         mRatingBar = findViewById(R.id.detailsRatingBar);
         mRatingBar.setOnRatingBarChangeListener((ratingBar, v, b) -> {
             ContentValues contentValues = new ContentValues();
-            contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, v);
+            contentValues.put(DatabaseDescription.Remix.COLUMN_RATING, v);
 
-            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
+            Cursor c = getContentResolver().query(DatabaseDescription.Remix.CONTENT_URI, new String[]{DatabaseDescription.Remix._ID}, DatabaseDescription.Remix.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
 
             if (c != null) {
                 c.moveToFirst();
-                int recId = c.getInt(0);
-                getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI,contentValues,DatabaseDescription.Recording._ID+"=?",new String[] {String.valueOf(recId)}); //id is the id of the row you wan to update
+                int remId = c.getInt(0);
+                getContentResolver().update(DatabaseDescription.Remix.CONTENT_URI,contentValues,DatabaseDescription.Remix._ID+"=?",new String[] {String.valueOf(remId)}); //id is the id of the row you want to update
                 c.close();
             }
 
@@ -250,18 +298,18 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
                 RatingBar rb = (RatingBar) v;
                 float rating = rb.getRating();
                 if (rating == 1.0f) {
-                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
+                    vals.put(DatabaseDescription.Remix.COLUMN_FAVORITE, false);
                     rb.setRating(0.0f);
                 } else {
-                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
+                    vals.put(DatabaseDescription.Remix.COLUMN_FAVORITE, true);
                     rb.setRating(1.0f);
                 }
-                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
+                Cursor c = getContentResolver().query(DatabaseDescription.Remix.CONTENT_URI, new String[]{DatabaseDescription.Remix._ID}, DatabaseDescription.Remix.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
 
                 if (c != null) {
                     c.moveToFirst();
-                    int recId = c.getInt(0);
-                    getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
+                    int remId = c.getInt(0);
+                    getContentResolver().update(DatabaseDescription.Remix.CONTENT_URI, vals, DatabaseDescription.Remix._ID + "=?", new String[]{String.valueOf(remId)}); // get position of selected item
                     c.close();
                 }
 
@@ -272,7 +320,7 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
 
             return mFavoriteChanged;
         });
-        mRemixesSpinner = findViewById(R.id.recs_spinner);
+        mRemixesSpinner = findViewById(R.id.rems_spinner);
 
         mRemixRatings = new ArrayList<>();
         mRemixFavs = new ArrayList<>();

@@ -41,6 +41,8 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
                                 EXISTING_PIECE_URI = "existing_piece_uri";
 
     private static final int NUM_SECS_IN_MIN = 60;
+    private static final int NUM_MINS_IN_HOUR = 60;
+
     private static final double BYTES_PER_SEC = 43478.26086956523 * 2 * 2;
     private static final int BUFFERED_INPUT_STREAM_SIZE = 16384;
     private static final int BYTE_READ_LEN = 1000000;
@@ -232,15 +234,15 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
     }
 
     @Override
-    public void onTimeSet(com.ikovac.timepickerwithseconds.TimePicker view, int hourOfDay, int minute, int second, String startOrEnd, int childIdx) {
+    public void onTimeSet(com.ikovac.timepickerwithseconds.TimePicker view, int hour, int minute, int second, String startOrEnd, int childIdx) {
         if (startOrEnd.equals("start"))
         {
-            mStartTimes[childIdx] = second + minute * NUM_SECS_IN_MIN;
-            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_start_time_textview)).setText(minute + ":" + second);
+            mStartTimes[childIdx] = second + minute * NUM_SECS_IN_MIN + hour * NUM_MINS_IN_HOUR * NUM_SECS_IN_MIN;
+            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_start_time_textview)).setText(hour + ":"  + minute + ":" + second);
 
         } else {
-            mEndTimes[childIdx] = second + minute * NUM_SECS_IN_MIN;
-            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_end_time_textview)).setText(minute + ":" + second);
+            mEndTimes[childIdx] = second + minute * NUM_SECS_IN_MIN + hour * NUM_MINS_IN_HOUR * NUM_SECS_IN_MIN;
+            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_end_time_textview)).setText(hour + ":" + minute + ":" + second);
         }
     }
 }

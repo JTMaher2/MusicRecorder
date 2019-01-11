@@ -8,8 +8,10 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
@@ -18,6 +20,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -35,6 +38,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
@@ -43,6 +47,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                                                                     AdapterView.OnItemSelectedListener {
     private static final int LOADER_TYPE_PIECE = 0;
     private static final int LOADER_TYPE_RECORDING = 1;
+    private static final int BUFFER_SIZE = 8000;
+    private static final int SAMPLE_RATE = 44100;
     // keys for storing a piece's/recording's Uri in a Bundle passed to the activity
     private static final String PIECE_URI = "piece_uri",
             RECORDING_URIS = "recording_uris",
@@ -53,6 +59,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private Uri pieceUri;
 
     private static final int PIECE_LOADER = 0; // identifies the Loader
+    private static final String TAG = "DetailsActivity";
 
     private Spinner mRecsSpinner;
     private CustomAdapter mRecsSpinnerAdapter;
@@ -68,11 +75,14 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                                 EXISTING_PIECE_URI = "existing_piece_uri",
                                 PIECE_ID = "piece_id";
     private static final String FOR_EXISTING = "for_existing";
-    private Button mEditBtn;
+    private Button mEditBtn, mPlayBtn;
     private ContentValues mUpdateValues;
     private CustomRatingBar mFavoriteStar;
     private String mSelectedItem;
     private int mPieceId;
+    private AudioTrack mAudioTrack;
+    private BufferedInputStream mBis;
+    private FileInputStream mFin;
 
     private final OnClickListener editBtnDoneListener = new OnClickListener(){
         @Override
@@ -115,52 +125,95 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
       }
     };
 
+    // stop playing a recording
+    void stopPlaying()
+    {
+        //mAudioTrack.flush();
+        //mAudioTrack.stop();
+        //mAudioTrack.release();
+        mAudioTrack.pause();
+        mAudioTrack.flush();
+
+        mPlayBtn.setText("Play");
+        mPlayBtn.setOnClickListener((view) -> playRec());
+    }
+
+    Thread m_playThread;
+
+    Runnable m_playGenerator = new Runnable()
+    {
+        public void run()
+        {
+            Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+
+            int i;
+
+            try {
+                while ((i = mDis.read(mByteData, 0, mBufSize)) > -1)
+                    mAudioTrack.write(mByteData, 0, i);
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+
+            mAudioTrack.stop(); // stop after last buffer is played
+            mAudioTrack.release();
+            try {
+                mDis.close();
+                mBis.close();
+                mFin.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    private int mBufSize;
+    private byte[] mByteData;
+    private DataInputStream mDis;
+
     // play a selected recording
     void playRec()
     {
-        byte[] byteData = null;
+        mPlayBtn.setText("Stop");
+        mPlayBtn.setOnClickListener((view)-> stopPlaying());
+
         File file = null;
         file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()));
 
         // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
-        AudioTrack at = new AudioTrack.Builder()
+        mAudioTrack = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .build())
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(44100)
+                        .setSampleRate(SAMPLE_RATE)
                         .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
                         .build())
-                .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_OUT_STEREO,
+                .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO,
                         AudioFormat.ENCODING_PCM_8BIT))
                 .build();
 
+        mBufSize = (int) file.length();
+        mByteData = new byte[mBufSize];
+
+        //AudioTrack at = (AudioTrack)params[0];
         int i = 0;
-        int bufSize = (int) file.length();
-        byteData = new byte[bufSize];
+        //DataInputStream dis = (DataInputStream)params[1];
+        //byte[] byteData = (byte[])params[2];
+        //int bufSize = (int)params[3];
 
-        try
-        {
-            FileInputStream in = new FileInputStream( file );
-            BufferedInputStream bis = new BufferedInputStream(in, 8000);
-            DataInputStream dis = new DataInputStream(bis);
+        try {
+            mFin = new FileInputStream( file );
+            mBis = new BufferedInputStream(mFin, BUFFER_SIZE);
+            mDis = new DataInputStream(mBis);
 
-                /*while (dis.available() > 0)
-                {
-                    byteData[i] = dis.readByte();
-                    i++;
-                }*/
-            at.play();
-            while ((i = dis.read(byteData, 0, bufSize)) > -1)
-                at.write(byteData, 0, i);
-            at.stop();
-            at.release();
-            dis.close();
-            bis.close();
-            in.close();
+            mAudioTrack.play();
+
+            m_playThread = new Thread(m_playGenerator);
+            m_playThread.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -183,40 +236,37 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         Button newRecBtn = findViewById(R.id.new_rec_btn_details);
         mEditBtn = findViewById(R.id.edit_btn);
         Button remixBtn = findViewById(R.id.remix_btn);
-        Button playBtn = findViewById(R.id.play_btn);
-        playBtn.setOnClickListener((view)-> playRec());
+        mPlayBtn = findViewById(R.id.play_btn);
+        mPlayBtn.setOnClickListener((view)-> playRec());
         ConstraintLayout constraintLayout = findViewById(R.id.details_constraint_layout);
         AdapterView.OnItemSelectedListener onItemSelectedListener = this;
         Button delRecBtn = findViewById(R.id.del_rec_btn);
-        delRecBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                String remixName = mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition());
-                File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + remixName);
-                boolean deleted = file.delete();
-                if (deleted) {
-                    int dbDeleted = getContentResolver().delete(DatabaseDescription.Recording.buildRecordingUriForRecWithName(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), remixName), null, null);
+        delRecBtn.setOnClickListener(v -> {
+            String remixName = mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition());
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + remixName);
+            boolean deleted = file.delete();
+            if (deleted) {
+                int dbDeleted = getContentResolver().delete(DatabaseDescription.Recording.buildRecordingUriForRecWithName(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), remixName), null, null);
 
-                    // remove deleted remix from spinner
-                    mRecsSpinnerElems.remove(remixName);
-                    Object[] elemsArray = mRecsSpinnerElems.toArray();
-                    if (elemsArray != null) {
-                        mRecsSpinnerAdapter = new CustomAdapter(getApplicationContext(), Arrays.copyOf(elemsArray, elemsArray.length, String[].class));
-                    }
-                    mRecsSpinner.setAdapter(mRecsSpinnerAdapter);
-                    mRecsSpinner.setOnItemSelectedListener(onItemSelectedListener);
+                // remove deleted remix from spinner
+                mRecsSpinnerElems.remove(remixName);
+                Object[] elemsArray = mRecsSpinnerElems.toArray();
+                if (elemsArray != null) {
+                    mRecsSpinnerAdapter = new CustomAdapter(getApplicationContext(), Arrays.copyOf(elemsArray, elemsArray.length, String[].class));
+                }
+                mRecsSpinner.setAdapter(mRecsSpinnerAdapter);
+                mRecsSpinner.setOnItemSelectedListener(onItemSelectedListener);
 
-                    if (dbDeleted > 0) {
-                        Snackbar.make(constraintLayout,
-                                R.string.recording_deleted, Snackbar.LENGTH_LONG).show();
-                    } else {
-                        Snackbar.make(constraintLayout,
-                                R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
-                    }
+                if (dbDeleted > 0) {
+                    Snackbar.make(constraintLayout,
+                            R.string.recording_deleted, Snackbar.LENGTH_LONG).show();
                 } else {
                     Snackbar.make(constraintLayout,
                             R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
                 }
+            } else {
+                Snackbar.make(constraintLayout,
+                        R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
             }
         });
         mNameTv = findViewById(R.id.detailsNameTextView);

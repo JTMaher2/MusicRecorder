@@ -40,26 +40,10 @@
         app:layout_constraintStart_toEndOf="@+id/combine_btn"
         app:layout_constraintTop_toBottomOf="@+id/start_end_times_recyclerview" />
 
-    <TextView
-        android:id="@+id/min_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="175dp"
-        android:text="Min." />
-
-    <TextView
-        android:id="@+id/sec_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:paddingLeft="10dp"
-        android:text="Sec."
-        app:layout_constraintStart_toEndOf="@+id/min_textview" />
-
     <android.support.v7.widget.RecyclerView
         android:id="@+id/start_end_times_recyclerview"
         android:layout_width="395dp"
-        android:layout_height="431dp"
+        android:layout_height="434dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
