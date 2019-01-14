@@ -21,6 +21,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -147,7 +148,19 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    mPlayBtn.setText("Play");
+                    mPlayBtn.setOnClickListener((view) -> playRec());
+
+                }
+            });
         }
+
+
     };
 
     // stop playing a recording
@@ -293,30 +306,37 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         mFavoriteStar = findViewById(R.id.detailsFavoriteStar);
 
         mFavoriteStar.setOnTouchListener((v, me) -> {
-            if (!mFavoriteChanged) {
-                ContentValues vals = new ContentValues();
-                RatingBar rb = (RatingBar) v;
-                float rating = rb.getRating();
-                if (rating == 1.0f) {
-                    vals.put(DatabaseDescription.Remix.COLUMN_FAVORITE, false);
-                    rb.setRating(0.0f);
-                } else {
-                    vals.put(DatabaseDescription.Remix.COLUMN_FAVORITE, true);
-                    rb.setRating(1.0f);
-                }
-                Cursor c = getContentResolver().query(DatabaseDescription.Remix.CONTENT_URI, new String[]{DatabaseDescription.Remix._ID}, DatabaseDescription.Remix.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
+            switch (me.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    if (!mFavoriteChanged) {
+                        ContentValues vals = new ContentValues();
+                        RatingBar rb = (RatingBar) v;
+                        float rating = rb.getRating();
+                        if (rating == 1.0f) {
+                            vals.put(DatabaseDescription.Remix.COLUMN_FAVORITE, false);
+                            rb.setRating(0.0f);
+                        } else {
+                            vals.put(DatabaseDescription.Remix.COLUMN_FAVORITE, true);
+                            rb.setRating(1.0f);
+                        }
+                        Cursor c = getContentResolver().query(DatabaseDescription.Remix.CONTENT_URI, new String[]{DatabaseDescription.Remix._ID}, DatabaseDescription.Remix.COLUMN_FILE_NAME + " = '" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()) + "'", null, null, null);
 
-                if (c != null) {
-                    c.moveToFirst();
-                    int remId = c.getInt(0);
-                    getContentResolver().update(DatabaseDescription.Remix.CONTENT_URI, vals, DatabaseDescription.Remix._ID + "=?", new String[]{String.valueOf(remId)}); // get position of selected item
-                    c.close();
-                }
+                        if (c != null) {
+                            c.moveToFirst();
+                            int remId = c.getInt(0);
+                            getContentResolver().update(DatabaseDescription.Remix.CONTENT_URI, vals, DatabaseDescription.Remix._ID + "=?", new String[]{String.valueOf(remId)}); // get position of selected item
+                            c.close();
+                        }
 
-                mFavoriteChanged = true;
+                        mFavoriteChanged = true;
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    break;
+                default:
+                    v.performClick(); // get rid of warning
+                    break;
             }
-
-            v.performClick();
 
             return mFavoriteChanged;
         });

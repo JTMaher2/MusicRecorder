@@ -9,7 +9,9 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -29,6 +31,8 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
     private static final int DIALOG_REQUEST_CODE = 9001;
     private static final int NUM_BYTES_PER_READ = 100;
     private static final int BYTES_PER_SEC = 44100 * 2 * 2;
+    private static final int SAMPLE_RATE_SIZE = 44100;
+    private static final int BUFFERED_INPUT_STREAM_SIZE = 8000;
     private int[] mStartTimes, mEndTimes;
 
     // keys for storing a piece's/recording's Uri in a Bundle passed to the activity
@@ -36,7 +40,16 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
             RECORDING_URIS = "recording_uris",
             PIECE_ID = "piece_id",
             TIME_PICKER_TYPE = "time_picker_type",
-            CHILD_IDX = "child_index";
+            CHILD_IDX = "child_index",
+            TAG = "MyTimesRecyclerVAdapter";
+
+    private AudioTrack mAt;
+    private DataInputStream mDis;
+    private byte[] mByteData;
+    private int mBufSize;
+    private BufferedInputStream mBis;
+    private FileInputStream mFin;
+    private double mBytesToPlay;
 
     class MyViewHolder extends RecyclerView.ViewHolder {
         final LinearLayout mLinearLayout;
@@ -61,60 +74,102 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
                     .inflate(R.layout.fragment_remix_pieces, parent, false));
     }
 
-    // play a selected recording
-    private void playRec(int pos, String recName)
+    // stop playing a preview
+    private void stopPlaying(int pos, Button previewBtn)
     {
+        //mAudioTrack.flush();
+        //mAudioTrack.stop();
+        //mAudioTrack.release();
+        mAt.pause();
+        mAt.flush();
+
+        previewBtn.setText("Preview");
+        previewBtn.setOnClickListener((view) -> playRec(pos, mDataset[pos], previewBtn));
+    }
+
+    // play a selected recording
+    private void playRec(int pos, String recName, Button previewBtn)
+    {
+        previewBtn.setText("Stop");
+        previewBtn.setOnClickListener((view)-> stopPlaying(pos, previewBtn));
+
         byte[] byteData = null;
         File file = null;
         file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + recName);
 
         // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
-        AudioTrack at = new AudioTrack.Builder()
+        mAt = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .build())
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(44100)
+                        .setSampleRate(SAMPLE_RATE_SIZE)
                         .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
                         .build())
-                .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_OUT_STEREO,
+                .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(SAMPLE_RATE_SIZE, AudioFormat.CHANNEL_OUT_STEREO,
                         AudioFormat.ENCODING_PCM_8BIT))
                 .build();
 
         int i = 0;
         int bufSize = (int) file.length();
-        byteData = new byte[bufSize];
+        mByteData = new byte[bufSize];
 
         try
         {
-            FileInputStream in = new FileInputStream( file );
-            BufferedInputStream bis = new BufferedInputStream(in, 8000);
-            DataInputStream dis = new DataInputStream(bis);
-            dis.skipBytes(BYTES_PER_SEC * mStartTimes[pos]); // skip the first N seconds, where N is the start time for this rec
-            at.play();
+            mFin = new FileInputStream( file );
+            mBis = new BufferedInputStream(mFin, BUFFERED_INPUT_STREAM_SIZE);
+            mDis = new DataInputStream(mBis);
+            mDis.skipBytes(BYTES_PER_SEC * mStartTimes[pos]); // skip the first N seconds, where N is the start time for this rec
+            mAt.play();
             int numSecToPlay = mEndTimes[pos] - mStartTimes[pos];
             double recSecLen = bufSize / BYTES_PER_SEC; // recording total # of seconds
-            double bytesToPlay = (numSecToPlay / recSecLen) * bufSize; // the number of bytes to read for the specified length
+            mBytesToPlay = (numSecToPlay / recSecLen) * bufSize; // the number of bytes to read for the specified length
 
-            int numBytesWritten = 1;
-            do {
-                i = dis.read(byteData, 0, NUM_BYTES_PER_READ/*bufSize*/);
-                at.write(byteData, 0, i);
-                numBytesWritten += NUM_BYTES_PER_READ;
-            } while (i > -1 && numBytesWritten < bytesToPlay);
+            class PlayAudioInBackground implements Runnable {
+                private PlayAudioInBackground() {}
+                public void run() {
+                    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
-             /*{
+                    int i;
+                    int numBytesWritten = 1;
+                    try {
+                        do {
+                            i = mDis.read(mByteData, 0, NUM_BYTES_PER_READ/*bufSize*/);
+                            mAt.write(mByteData, 0, i);
+                            numBytesWritten += NUM_BYTES_PER_READ;
+                        } while (i > -1 && numBytesWritten < mBytesToPlay);
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage());
+                    }
 
-                numBytesWritten++;
-            }*/
-            at.stop();
-            at.release();
-            dis.close();
-            bis.close();
-            in.close();
+                    mAt.stop(); // stop after last buffer is played
+                    mAt.release();
+                    try {
+                        mDis.close();
+                        mBis.close();
+                        mFin.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    ((AppCompatActivity)mContext).runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            previewBtn.setText("Preview");
+                            previewBtn.setOnClickListener((view) -> playRec(pos, mDataset[pos], previewBtn));
+
+                        }
+                    });
+                }
+            }
+
+            Thread m_playThread = new Thread(new PlayAudioInBackground());
+            m_playThread.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -122,7 +177,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
 
     @Override
     public void onBindViewHolder(@NonNull final MyViewHolder holder, final int position) {
-        final int pos = holder.getAdapterPosition();
+        int pos = holder.getAdapterPosition();
         ((TextView)holder.mLinearLayout.findViewById(R.id.rec_start_label)).setText(String.format(mContext.getString(R.string.recording_start), mDataset[pos]));
 
         ((TextView)holder.mLinearLayout.findViewById(R.id.rec_end_label)).setText(String.format(mContext.getString(R.string.recording_end), mDataset[pos]));
@@ -157,7 +212,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
 
         Button previewBtn = holder.mLinearLayout.findViewById(R.id.preview_button);
         previewBtn.setOnClickListener(view -> {
-            playRec(pos, mDataset[pos]);
+            playRec(pos, mDataset[pos], previewBtn);
         });
 
     }

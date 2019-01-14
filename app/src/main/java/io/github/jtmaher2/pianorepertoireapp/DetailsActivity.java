@@ -164,6 +164,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    mPlayBtn.setText("Play");
+                    mPlayBtn.setOnClickListener((view) -> playRec());
+
+                }
+            });
         }
     };
 

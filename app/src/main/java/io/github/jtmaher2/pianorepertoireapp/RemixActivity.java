@@ -238,11 +238,11 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
         if (startOrEnd.equals("start"))
         {
             mStartTimes[childIdx] = second + minute * NUM_SECS_IN_MIN + hour * NUM_MINS_IN_HOUR * NUM_SECS_IN_MIN;
-            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_start_time_textview)).setText(hour + ":"  + minute + ":" + second);
+            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_start_time_textview)).setText(getString(R.string.hr_min_sec, hour, minute, second));
 
         } else {
             mEndTimes[childIdx] = second + minute * NUM_SECS_IN_MIN + hour * NUM_MINS_IN_HOUR * NUM_SECS_IN_MIN;
-            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_end_time_textview)).setText(hour + ":" + minute + ":" + second);
+            ((TextView)mRecyclerView.getChildAt(childIdx).findViewById(R.id.rec_end_time_textview)).setText(getString(R.string.hr_min_sec, hour, minute, second));
         }
     }
 }

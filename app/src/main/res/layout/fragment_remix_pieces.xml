@@ -23,8 +23,7 @@
             android:id="@+id/rec_start_time_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="TextView" />
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/pick_start_btn"
@@ -49,8 +48,7 @@
             android:id="@+id/rec_end_time_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="TextView" />
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/pick_end_btn"
