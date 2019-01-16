@@ -39,6 +39,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
@@ -83,6 +85,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private AudioTrack mAudioTrack;
     private BufferedInputStream mBis;
     private FileInputStream mFin;
+    private static final int ONE_SECOND = 60000;
 
     private final OnClickListener editBtnDoneListener = new OnClickListener(){
         @Override
@@ -229,6 +232,52 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         }
     }
 
+    private class MyTimerTask extends TimerTask {
+
+        @Override
+        public void run() {
+            mFavoriteStar.setOnTouchListener(mRatingStarListener); // restore the listener
+        }
+
+
+    }
+
+    private Timer mRatingStarTimer;
+    private TimerTask mRatingStarTimerTask;
+
+    private View.OnTouchListener mRatingStarListener = (v, me) -> {
+        if (!mFavoriteChanged) {
+            ContentValues vals = new ContentValues();
+            RatingBar rb = (RatingBar) v;
+            float rating = rb.getRating();
+            if (rating == 1.0f) {
+                vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
+                rb.setRating(0.0f);
+            } else {
+                vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
+                rb.setRating(1.0f);
+            }
+            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()) + "'", null, null, null);
+
+            if (c != null) {
+                c.moveToFirst();
+                int recId = c.getInt(0);
+                getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
+                c.close();
+            }
+
+            mFavoriteChanged = true;
+        }
+
+        v.performClick();
+
+        // prevent favorite star from being clicked multiple times at once
+        mFavoriteStar.setOnTouchListener(null); // remove the listener
+        mRatingStarTimer.schedule(mRatingStarTimerTask, ONE_SECOND);
+
+        return mFavoriteChanged;
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -300,34 +349,11 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         });
         mFavoriteStar = findViewById(R.id.detailsFavoriteStar);
 
-        mFavoriteStar.setOnTouchListener((v, me) -> {
-            if (!mFavoriteChanged) {
-                ContentValues vals = new ContentValues();
-                RatingBar rb = (RatingBar) v;
-                float rating = rb.getRating();
-                if (rating == 1.0f) {
-                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
-                    rb.setRating(0.0f);
-                } else {
-                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
-                    rb.setRating(1.0f);
-                }
-                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()) + "'", null, null, null);
+        // timer to prevent favorite star from being clicked multiple times at once
+        mRatingStarTimerTask = new MyTimerTask();
+        mRatingStarTimer = new Timer(true);
 
-                if (c != null) {
-                    c.moveToFirst();
-                    int recId = c.getInt(0);
-                    getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
-                    c.close();
-                }
-
-                mFavoriteChanged = true;
-            }
-
-            v.performClick();
-
-            return mFavoriteChanged;
-        });
+        mFavoriteStar.setOnTouchListener(mRatingStarListener);
         mRecsSpinner = findViewById(R.id.recs_spinner);
 
         mRecRatings = new ArrayList<>();
