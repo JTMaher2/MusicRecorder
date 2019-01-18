@@ -39,6 +39,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireContentProvider;
@@ -83,6 +85,7 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
     private CustomRatingBar mFavoriteStar;
     private String mSelectedItem;
     private int mPieceId;
+    private static final int ONE_SECOND = 1000;
 
     private final OnClickListener editBtnDoneListener = new OnClickListener(){
         @Override
@@ -234,6 +237,14 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         startActivity(i);
     }
 
+    private class MyTimerTask extends TimerTask {
+
+        @Override
+        public void run() {
+            runOnUiThread(() -> mFavoriteStar.setEnabled(true));
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -305,6 +316,9 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         });
         mFavoriteStar = findViewById(R.id.detailsFavoriteStar);
 
+        // timer to prevent favorite star from being clicked multiple times at once
+        Timer mFavoriteStarTimer = new Timer(true);
+
         mFavoriteStar.setOnTouchListener((v, me) -> {
             switch (me.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -337,6 +351,10 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
                     v.performClick(); // get rid of warning
                     break;
             }
+
+            // prevent favorite star from being clicked multiple times at once
+            mFavoriteStar.setEnabled(false); // remove the listener
+            mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
 
             return mFavoriteChanged;
         });
