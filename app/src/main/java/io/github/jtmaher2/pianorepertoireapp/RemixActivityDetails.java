@@ -185,44 +185,46 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         mPlayBtn.setText("Stop");
         mPlayBtn.setOnClickListener((view)-> stopPlaying());
         byte[] byteData = null;
-        File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition()));
+        int remixPos = mRemixesSpinner.getSelectedItemPosition();
+        if (remixPos > -1) {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRemixesSpinnerElems.get(remixPos));
 
-        // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+            // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
-        mAt = new AudioTrack.Builder()
-                .setAudioAttributes(new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build())
-                .setAudioFormat(new AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(44100)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
-                        .build())
-                .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_OUT_STEREO,
-                        AudioFormat.ENCODING_PCM_8BIT))
-                .build();
+            mAt = new AudioTrack.Builder()
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    .setAudioFormat(new AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setSampleRate(44100)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                            .build())
+                    .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_OUT_STEREO,
+                            AudioFormat.ENCODING_PCM_8BIT))
+                    .build();
 
-        int i = 0;
-        mBufSize = (int) file.length();
-        mByteData = new byte[mBufSize];
+            int i = 0;
+            mBufSize = (int) file.length();
+            mByteData = new byte[mBufSize];
 
-        try
-        {
-            mFin = new FileInputStream( file );
-            mBis = new BufferedInputStream(mFin, 8000);
-            mDis = new DataInputStream(mBis);
+            try {
+                mFin = new FileInputStream(file);
+                mBis = new BufferedInputStream(mFin, 8000);
+                mDis = new DataInputStream(mBis);
 
-                /*while (dis.available() > 0)
-                {
-                    byteData[i] = dis.readByte();
-                    i++;
-                }*/
-            mAt.play();
-            m_playThread = new Thread(m_playGenerator);
-            m_playThread.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+                    /*while (dis.available() > 0)
+                    {
+                        byteData[i] = dis.readByte();
+                        i++;
+                    }*/
+                mAt.play();
+                m_playThread = new Thread(m_playGenerator);
+                m_playThread.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
