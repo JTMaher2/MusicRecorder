@@ -14,6 +14,7 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -82,6 +83,10 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
     private boolean m_RecordingsDirCreated;
     private File m_RecordingsDir;
 
+    private String mPieceName;
+    private boolean mForExisting;
+    private Uri mExistingPieceUri;
+
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
@@ -125,6 +130,9 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
                 Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(NewRecordingActivity.this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
             } else {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(NewRecordingActivity.this,
@@ -202,7 +210,16 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
             if (recorder != null) {
                 recorder.startRecording();
                 isRecording = true;
-                recordingThread = new Thread(() -> writeAudioDataToFile(pieceNameTv.getText().toString(), forExisting, existingPieceUri), "AudioRecorder Thread");
+                recordingThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Looper.prepare();
+                        mPieceName = pieceNameTv.getText().toString();
+                        mForExisting = forExisting;
+                        mExistingPieceUri = existingPieceUri;
+                        NewRecordingActivity.this.writeAudioDataToFile();
+                    }
+                }, "AudioRecorder Thread");
                 recordingThread.start();
                 timer.schedule(new TimerTask() {
                     @Override
@@ -264,7 +281,8 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                         RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
                 break;
             case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
-                m_RecordingsDirCreated = m_RecordingsDir.mkdirs();
+                writePieceToExternalStorage();
+                //m_RecordingsDirCreated = m_RecordingsDir.mkdirs();
                 break;
         }
     }
@@ -336,12 +354,13 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         }
     }
 
-    private void writeAudioDataToFile(final String pieceName, boolean forExisting, Uri existingPieceId) {
+    private void writeAudioDataToFile() {
         // create a directory for this app, if it doesn't already exist
         m_RecordingsDir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
 
         if (m_RecordingsDir.isDirectory()) {
-            m_RecordingsDirCreated = true; // the "Piano Repertoire" directory has already been created
+            //m_RecordingsDirCreated = true; // the "Piano Repertoire" directory has already been created
+            writePieceToExternalStorage();
         } else {
             // Here, thisActivity is the current activity
             if (ContextCompat.checkSelfPermission(NewRecordingActivity.this,
@@ -355,6 +374,9 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                     // this thread waiting for the user's response! After the user
                     // sees the explanation, try again to request the permission.
                     Toast.makeText(getApplicationContext(), "The app needs permission to record audio in order to make recordings.", Toast.LENGTH_SHORT).show();
+                    ActivityCompat.requestPermissions(NewRecordingActivity.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
                 } else {
                     // No explanation needed; request the permission
                     ActivityCompat.requestPermissions(NewRecordingActivity.this,
@@ -367,51 +389,65 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                 }
             } else {
                 // Permission has already been granted
-                m_RecordingsDirCreated = m_RecordingsDir.mkdirs();
+                writePieceToExternalStorage();
             }
         }
 
-        if (m_RecordingsDirCreated) {
-            // make a new file for this recording in the above directory
-            filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceName + ".pcm";
+        /*if (m_RecordingsDirCreated) {
 
-            PianoRepertoireDatabaseHelper prdh = new PianoRepertoireDatabaseHelper(getApplicationContext());
-            SQLiteDatabase sqldb = SQLiteDatabase.create((sqLiteDatabase, sqLiteCursorDriver, s, sqLiteQuery) -> null);
+        } else {
+            Toast.makeText(getApplicationContext(), "Error creating recordings directory.", Toast.LENGTH_SHORT).show();
+        }*/
+    }
 
-            prdh.onCreate(sqldb); // Create the PIECES and RECORDINGS tables if they don't already exist
-            long pieceId = savePiece(forExisting, existingPieceId);
-            saveRecordingFileName(pieceId);
-
-            short sData[] = new short[BufferElements2Rec];
-
-            os = null;
-
-            try {
-                os = new FileOutputStream(filePath);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+    private void writePieceToExternalStorage()
+    {
+        File dir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
+        if (!dir.exists()) {
+            boolean dirCreated = dir.mkdir();
+            if (!dirCreated) {
+                Snackbar.make(constraintLayout,
+                        "error creating directory", Snackbar.LENGTH_LONG).show();
             }
+        }
 
-            while (isRecording) {
-                recorder.read(sData, 0, BufferElements2Rec);
-                try {
-                    byte bData[] = short2byte(sData);
-                    assert os != null;
-                    os.write(bData, 0, BufferElements2Rec * BytesPerElement);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        // make a new file for this recording in the above directory
+        filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + mPieceName + ".pcm";
 
+        PianoRepertoireDatabaseHelper prdh = new PianoRepertoireDatabaseHelper(getApplicationContext());
+        SQLiteDatabase sqldb = SQLiteDatabase.create((sqLiteDatabase, sqLiteCursorDriver, s, sqLiteQuery) -> null);
+
+        prdh.onCreate(sqldb); // Create the PIECES and RECORDINGS tables if they don't already exist
+        long pieceId = savePiece(mForExisting, mExistingPieceUri);
+        saveRecordingFileName(pieceId);
+
+        short sData[] = new short[BufferElements2Rec];
+
+        os = null;
+
+        try {
+            os = new FileOutputStream(filePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        while (isRecording) {
+            recorder.read(sData, 0, BufferElements2Rec);
             try {
-                if (os != null) {
-                    os.close();
-                }
+                byte bData[] = short2byte(sData);
+                assert os != null;
+                os.write(bData, 0, BufferElements2Rec * BytesPerElement);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-            Toast.makeText(getApplicationContext(), "Error creating recordings directory.", Toast.LENGTH_SHORT).show();
+        }
+
+        try {
+            if (os != null) {
+                os.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
