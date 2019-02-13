@@ -210,15 +210,12 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
             if (recorder != null) {
                 recorder.startRecording();
                 isRecording = true;
-                recordingThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Looper.prepare();
-                        mPieceName = pieceNameTv.getText().toString();
-                        mForExisting = forExisting;
-                        mExistingPieceUri = existingPieceUri;
-                        NewRecordingActivity.this.writeAudioDataToFile();
-                    }
+                recordingThread = new Thread(() -> {
+                    //Looper.prepare();
+                    mPieceName = pieceNameTv.getText().toString();
+                    mForExisting = forExisting;
+                    mExistingPieceUri = existingPieceUri;
+                    NewRecordingActivity.this.writeAudioDataToFile();
                 }, "AudioRecorder Thread");
                 recordingThread.start();
                 timer.schedule(new TimerTask() {

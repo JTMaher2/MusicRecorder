@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -74,7 +75,8 @@ public class MyPiecesRecyclerViewAdapter extends RecyclerView.Adapter<MyPiecesRe
         holder.mLinearLayout.findViewById(R.id.piece_details_btn).setOnClickListener(view -> {
             Intent i = new Intent(mContext, DetailsActivity.class);
             i.putExtra(PIECE_URI, DatabaseDescription.Piece.buildPieceUri(holder.getAdapterPosition() + 1));
-            ArrayList<Uri> recordingUris = DatabaseDescription.Recording.buildRecordingUris(new PianoRepertoireDatabaseHelper(mContext).getReadableDatabase(), holder.getAdapterPosition() + 1);
+            SQLiteDatabase db = new PianoRepertoireDatabaseHelper(mContext).getReadableDatabase();
+            ArrayList<Uri> recordingUris = DatabaseDescription.Recording.buildRecordingUris(db, holder.getAdapterPosition() + 1);
             ArrayList<Uri> remixUris = DatabaseDescription.Remix.buildRemixUris(new PianoRepertoireDatabaseHelper(mContext).getReadableDatabase(), holder.getAdapterPosition() + 1);
 
             i.putParcelableArrayListExtra(RECORDING_URIS, recordingUris);

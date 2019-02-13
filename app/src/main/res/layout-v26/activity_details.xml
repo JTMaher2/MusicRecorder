@@ -14,16 +14,16 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="33dp"
         android:enabled="false"
-        android:text="@string/name_with_colon"
         android:hint="@string/name"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:text="@string/name_with_colon"
         app:layout_constraintBottom_toBottomOf="@+id/textView9"
         app:layout_constraintEnd_toEndOf="@+id/textView9"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView9"
-        app:layout_constraintVertical_bias="0.644"
-        android:importantForAutofill="no"
-        android:inputType="text" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <EditText
         android:id="@+id/detailsComposerTextView"
@@ -57,55 +57,64 @@
 
     <TextView
         android:id="@+id/detailsFavoriteTextView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="200dp"
-        android:layout_marginTop="20dp"
+        android:layout_width="53dp"
+        android:layout_height="33dp"
+        android:layout_marginStart="300dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:text="Favorite"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detailsRatingBar" />
+        app:layout_constraintTop_toBottomOf="@+id/play_btn"
+        app:layout_constraintVertical_bias="0.642" />
 
     <TextView
         android:id="@+id/detailsFavoriteTextView3"
-        android:layout_width="0dp"
+        android:layout_width="72dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:text="Rating"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/recs_textview"
         app:layout_constraintEnd_toStartOf="@+id/detailsRatingBar"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recs_spinner"
-        app:layout_constraintVertical_bias="0.045" />
+        app:layout_constraintTop_toBottomOf="@+id/detailsNotesTextView"
+        app:layout_constraintVertical_bias="0.442" />
 
     <Button
         android:id="@+id/new_rec_btn_details"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="52dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:background="@color/colorPrimaryDark"
         android:text="@string/new_recording"
         android:textColor="@android:color/background_light"
-        app:layout_constraintEnd_toEndOf="@+id/detailsFavoriteStar"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="@+id/detailsFavoriteTextView"
-        app:layout_constraintTop_toBottomOf="@+id/detailsFavoriteTextView" />
+        app:layout_constraintBottom_toTopOf="@+id/detailsFavoriteTextView"
+        app:layout_constraintEnd_toStartOf="@+id/play_btn"
+        app:layout_constraintHorizontal_bias="0.96"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recs_spinner"
+        app:layout_constraintVertical_bias="0.538" />
 
     <Button
         android:id="@+id/edit_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="86dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
         android:background="@android:color/holo_orange_light"
         android:text="@string/edit"
         android:textColor="@android:color/black"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/textView9"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/remix_btn"
@@ -120,7 +129,7 @@
         android:textColor="@android:color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.957"
         app:layout_constraintStart_toEndOf="@+id/detailsComposerTextView"
         app:layout_constraintTop_toBottomOf="@+id/edit_btn"
         app:layout_constraintVertical_bias="0.0" />
@@ -129,19 +138,18 @@
         android:id="@+id/textView9"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:text="@string/details"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.532"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/recs_textview"
         android:layout_width="wrap_content"
         android:layout_height="26dp"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="84dp"
         android:text="@string/recordings"
         app:layout_constraintEnd_toEndOf="@+id/detailsNotesTextView"
         app:layout_constraintHorizontal_bias="1.0"
@@ -151,13 +159,12 @@
 
     <Spinner
         android:id="@+id/recs_spinner"
-        android:layout_width="294dp"
-        android:layout_height="43dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="245dp"
+        android:layout_height="40dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/detailsRatingBar"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/recs_textview"
-        app:layout_constraintHorizontal_bias="0.617"
+        app:layout_constraintHorizontal_bias="0.757"
         app:layout_constraintStart_toStartOf="@+id/recs_textview"
         app:layout_constraintTop_toBottomOf="@+id/recs_textview"
         app:layout_constraintVertical_bias="0.0" />
@@ -166,34 +173,45 @@
         android:id="@+id/detailsRatingBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="@+id/recs_spinner"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/recs_spinner"
-        app:layout_constraintTop_toBottomOf="@+id/recs_spinner" />
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/detailsNotesTextView"
+        app:layout_constraintVertical_bias="0.008" />
 
     <io.github.jtmaher2.pianorepertoireapp.CustomRatingBar
         android:id="@+id/detailsFavoriteStar"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="116dp"
+        android:layout_height="66dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:numStars="1"
         android:stepSize="1"
-        app:layout_constraintEnd_toEndOf="@+id/detailsRatingBar"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/del_rec_btn"
+        app:layout_constraintHorizontal_bias="0.105"
         app:layout_constraintStart_toEndOf="@+id/detailsFavoriteTextView"
-        app:layout_constraintTop_toBottomOf="@+id/detailsRatingBar" />
+        app:layout_constraintTop_toBottomOf="@+id/play_btn"
+        app:layout_constraintVertical_bias="0.783" />
 
     <Button
         android:id="@+id/play_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:text="Play"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/recs_spinner"
         app:layout_constraintTop_toBottomOf="@+id/remix_btn"
-        app:layout_constraintVertical_bias="0.046" />
+        app:layout_constraintVertical_bias="0.406" />
 
     <Button
         android:id="@+id/del_rec_btn"
@@ -206,8 +224,8 @@
         android:text="Delete"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.333"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/recs_spinner"
-        app:layout_constraintTop_toBottomOf="@+id/play_btn"
-        app:layout_constraintVertical_bias="0.271" />
+        app:layout_constraintTop_toBottomOf="@+id/remix_btn"
+        app:layout_constraintVertical_bias="0.046" />
 </android.support.constraint.ConstraintLayout>

@@ -293,13 +293,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             ContentValues contentValues = new ContentValues();
             contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, v);
 
-            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()) + "'", null, null, null);
+            int spinnerPos = mRecsSpinner.getSelectedItemPosition();
+            if (spinnerPos > -1) {
+                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(spinnerPos) + "'", null, null, null);
 
-            if (c != null) {
-                c.moveToFirst();
-                int recId = c.getInt(0);
-                getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI,contentValues,DatabaseDescription.Recording._ID+"=?",new String[] {String.valueOf(recId)}); //id is the id of the row you wan to update
-                c.close();
+                if (c != null) {
+                    c.moveToFirst();
+                    int recId = c.getInt(0);
+                    getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, contentValues, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); //id is the id of the row you wan to update
+                    c.close();
+                }
             }
 
             mRatingChanged = true;
@@ -321,13 +324,18 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                     vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
                     rb.setRating(1.0f);
                 }
-                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()) + "'", null, null, null);
 
-                if (c != null) {
-                    c.moveToFirst();
-                    int recId = c.getInt(0);
-                    getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
-                    c.close();
+                int recPos = mRecsSpinner.getSelectedItemPosition();
+
+                if (recPos > -1) {
+                    Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(recPos) + "'", null, null, null);
+
+                    if (c != null) {
+                        c.moveToFirst();
+                        int recId = c.getInt(0);
+                        getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
+                        c.close();
+                    }
                 }
 
                 mFavoriteChanged = true;
