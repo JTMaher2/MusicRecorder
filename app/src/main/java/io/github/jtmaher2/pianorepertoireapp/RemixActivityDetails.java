@@ -376,10 +376,12 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
             startActivity(i1);
         });
 
+
+
         LoaderManager lm = LoaderManager.getInstance(this);
 
         // attempt to load recordings
-        if (mRecUris != null) {
+        if (mRecUris != null && mRecUris.size() > 0) {
             //LoaderManager.getInstance(this).initLoader(LOADER_TYPE_PIECE, null, this);
 
             for (int l = 0; l < mRecUris.size(); l++) {
@@ -387,6 +389,8 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
                 b.putParcelable(REC_URI, mRecUris.get(l));
                 lm.initLoader(l + LOADER_TYPE_RECORDING, b, this);
             }
+        } else {
+            newRemixBtn.setEnabled(false); // disable new remix button
         }
 
         // attempt to load remixes
