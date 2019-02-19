@@ -81,6 +81,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private BufferedInputStream mBis;
     private FileInputStream mFin;
     private static final int ONE_SECOND = 1000;
+    Timer mFavoriteStarTimer;
+    Button mDelRecBtn;
 
     private final OnClickListener editBtnDoneListener = new OnClickListener(){
         @Override
@@ -231,7 +233,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         @Override
         public void run() {
-            runOnUiThread(() -> mFavoriteStar.setEnabled(true));
+            runOnUiThread(() -> mFavoriteStar.setEnabled(true)); // re-enable selecting
         }
     }
 
@@ -255,9 +257,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         mPlayBtn = findViewById(R.id.play_btn);
         mPlayBtn.setOnClickListener((view)-> playRec());
         ConstraintLayout constraintLayout = findViewById(R.id.details_constraint_layout);
-        AdapterView.OnItemSelectedListener onItemSelectedListener = this;
-        Button delRecBtn = findViewById(R.id.del_rec_btn);
-        delRecBtn.setOnClickListener(v -> {
+        DetailsActivity onItemSelectedListener = this;
+        mDelRecBtn = findViewById(R.id.del_rec_btn);
+        mDelRecBtn.setOnClickListener(v -> {
             String remixName = mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition());
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + remixName);
             boolean deleted = file.delete();
@@ -280,11 +282,20 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                     Snackbar.make(constraintLayout,
                             R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
                 }
+
+                if (mRecsSpinnerElems.size() == 0) {
+                    // if this was the last element, disable interaction with rating bar, delete button, and favorite star
+                    mDelRecBtn.setClickable(false);
+                    mRatingBar.setIsIndicator(true);
+                    mFavoriteStar.setIsIndicator(true);
+                    mFavoriteStar.setOnTouchListener(null);
+                }
             } else {
                 Snackbar.make(constraintLayout,
                         R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
             }
         });
+        mDelRecBtn.setClickable(false);
         mNameTv = findViewById(R.id.detailsNameTextView);
         mComposerTv = findViewById(R.id.detailsComposerTextView);
         mNotesTv = findViewById(R.id.detailsNotesTextView);
@@ -294,61 +305,24 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, v);
 
             int spinnerPos = mRecsSpinner.getSelectedItemPosition();
-            if (spinnerPos > -1) {
-                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(spinnerPos) + "'", null, null, null);
 
-                if (c != null) {
-                    c.moveToFirst();
-                    int recId = c.getInt(0);
-                    getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, contentValues, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); //id is the id of the row you wan to update
-                    c.close();
-                }
+            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(spinnerPos) + "'", null, null, null);
+
+            if (c != null) {
+                c.moveToFirst();
+                int recId = c.getInt(0);
+                getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, contentValues, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); //id is the id of the row you wan to update
+                c.close();
             }
 
             mRatingChanged = true;
         });
+        mRatingBar.setIsIndicator(true);
         mFavoriteStar = findViewById(R.id.detailsFavoriteStar);
-
+        mFavoriteStar.setIsIndicator(true);
+        mFavoriteStar.setOnTouchListener(null);
         // timer to prevent favorite star from being clicked multiple times at once
-        Timer mFavoriteStarTimer = new Timer(true);
-
-        mFavoriteStar.setOnTouchListener((v, me) -> {
-            if (!mFavoriteChanged) {
-                ContentValues vals = new ContentValues();
-                RatingBar rb = (RatingBar) v;
-                float rating = rb.getRating();
-                if (rating == 1.0f) {
-                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
-                    rb.setRating(0.0f);
-                } else {
-                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
-                    rb.setRating(1.0f);
-                }
-
-                int recPos = mRecsSpinner.getSelectedItemPosition();
-
-                if (recPos > -1) {
-                    Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(recPos) + "'", null, null, null);
-
-                    if (c != null) {
-                        c.moveToFirst();
-                        int recId = c.getInt(0);
-                        getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
-                        c.close();
-                    }
-                }
-
-                mFavoriteChanged = true;
-            }
-
-            v.performClick();
-
-            // prevent favorite star from being clicked multiple times at once
-            mFavoriteStar.setEnabled(false); // remove the listener
-            mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
-
-            return mFavoriteChanged;
-        });
+        mFavoriteStarTimer = new Timer(true);
         mRecsSpinner = findViewById(R.id.recs_spinner);
 
         mRecRatings = new ArrayList<>();
@@ -413,6 +387,43 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         return cursorLoader;
     }
 
+    private View.OnTouchListener mFavoriteStarTouchListener = (v, me) -> {
+        if (!mFavoriteChanged) {
+            ContentValues vals = new ContentValues();
+            RatingBar rb = (RatingBar) v;
+            float rating = rb.getRating();
+            if (rating == 1.0f) {
+                vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
+                rb.setRating(0.0f);
+            } else {
+                vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
+                rb.setRating(1.0f);
+            }
+
+            int recPos = mRecsSpinner.getSelectedItemPosition();
+
+            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(recPos) + "'", null, null, null);
+
+            if (c != null) {
+                c.moveToFirst();
+                int recId = c.getInt(0);
+                getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
+                c.close();
+            }
+
+            mFavoriteChanged = true;
+        }
+
+        v.performClick();
+
+        // prevent favorite star from being clicked multiple times at once
+        mFavoriteStar.setEnabled(false); // remove the listener
+
+        mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
+
+        return mFavoriteChanged;
+    };
+
     // called by LoaderManager when loading completes
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
@@ -431,9 +442,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             } else {
                 String recOrRem = data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_REC_OR_REM));
                 if (recOrRem.equals("rec")) { // LOADER_TYPE_REMIX
+                    // enable delete button, favorite star, and rating bar (if they are not already enabled)
+                    mDelRecBtn.setClickable(true);
+                    mFavoriteStar.setIsIndicator(false);
+                    mFavoriteStar.setOnTouchListener(mFavoriteStarTouchListener);
+                    mRatingBar.setIsIndicator(false);
+
                     if (mSelectedItem == null || data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)).equals(mSelectedItem)) {
                         if (mRecsSpinnerElems.size() < mRecordingUris.size()) {
                             mRecsSpinnerElems.add(data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)));
+
                         }
 
                         if (mRecsSpinner.getAdapter() == null && mRecsSpinnerElems.size() == mRecordingUris.size()) {
