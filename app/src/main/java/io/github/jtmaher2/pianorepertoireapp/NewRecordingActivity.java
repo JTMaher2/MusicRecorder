@@ -14,10 +14,12 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
@@ -242,20 +244,109 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                 recordingThread = null;
                 timer.cancel();
 
-                // go back
-                if (forExisting) {
-                    // existing piece, go to this piece's details activity
-                    Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
-                    mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
-                    details.putExtra(RECORDING_URIS, mRecUris);
-                    details.putExtra(REMIX_URIS, mRemixUris);
-                    details.putExtra(PIECE_ID, mPieceId);
-                    details.putExtra(PIECE_URI, mPieceUri);
+                if (mNewRecordingUri != null) {
+                    if (forExisting) {
+                        Snackbar recAddedSnackbar = Snackbar.make(constraintLayout,
+                                R.string.recording_added, Snackbar.LENGTH_LONG);
+                        recAddedSnackbar.addCallback(new Snackbar.Callback() {
 
-                    startActivity(details);
-                } else {
-                    // new piece, go to list
-                    startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
+                            @Override
+                            public void onDismissed(Snackbar snackbar, int event) {
+                                //see Snackbar.Callback docs for event details
+                                // go back
+                                if (forExisting) {
+                                    // existing piece, go to this piece's details activity
+                                    Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
+                                    mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
+                                    details.putExtra(RECORDING_URIS, mRecUris);
+                                    details.putExtra(REMIX_URIS, mRemixUris);
+                                    details.putExtra(PIECE_ID, mPieceId);
+                                    details.putExtra(PIECE_URI, mPieceUri);
+
+                                    startActivity(details);
+                                } else {
+                                    // new piece, go to list
+                                    startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
+                                }
+                            }
+
+                            @Override
+                            public void onShown(Snackbar snackbar) {
+                            }
+                        });
+                        recAddedSnackbar.show();
+                    } else {
+                        Snackbar pieceAddedSnackbar = Snackbar.make(constraintLayout,
+                                R.string.piece_added, Snackbar.LENGTH_LONG);
+                        pieceAddedSnackbar.addCallback(new Snackbar.Callback() {
+
+                            @Override
+                            public void onDismissed(Snackbar snackbar, int event) {
+                                //see Snackbar.Callback docs for event details
+                                // go back
+
+                                // new piece, go to list
+                                startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
+                            }
+
+                            @Override
+                            public void onShown(Snackbar snackbar) {
+                            }
+                        });
+                        pieceAddedSnackbar.show();
+                    }
+                }
+                else {
+                    if (forExisting) {
+                        Snackbar recNotAddedSnackbar = Snackbar.make(constraintLayout,
+                                R.string.recording_not_added, Snackbar.LENGTH_LONG);
+                        recNotAddedSnackbar.addCallback(new Snackbar.Callback() {
+
+                            @Override
+                            public void onDismissed(Snackbar snackbar, int event) {
+                                //see Snackbar.Callback docs for event details
+                                // go back
+                                if (forExisting) {
+                                    // existing piece, go to this piece's details activity
+                                    Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
+                                    mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
+                                    details.putExtra(RECORDING_URIS, mRecUris);
+                                    details.putExtra(REMIX_URIS, mRemixUris);
+                                    details.putExtra(PIECE_ID, mPieceId);
+                                    details.putExtra(PIECE_URI, mPieceUri);
+
+                                    startActivity(details);
+                                } else {
+                                    // new piece, go to list
+                                    startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
+                                }
+                            }
+
+                            @Override
+                            public void onShown(Snackbar snackbar) {
+                            }
+                        });
+                        recNotAddedSnackbar.show();
+                    } else {
+                        Snackbar pieceNotAddedSnackbar = Snackbar.make(constraintLayout,
+                                R.string.piece_not_added, Snackbar.LENGTH_LONG);
+                        pieceNotAddedSnackbar.addCallback(new Snackbar.Callback() {
+
+                            @Override
+                            public void onDismissed(Snackbar snackbar, int event) {
+                                //see Snackbar.Callback docs for event details
+                                // go back
+
+                                // new piece, go to list
+                                startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
+                            }
+
+                            @Override
+                            public void onShown(Snackbar snackbar) {
+                            }
+                        });
+                        pieceNotAddedSnackbar.show();
+                    }
                 }
             }
         });
@@ -306,18 +397,12 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         }
 
         if (pieceUri != null) {
-            Snackbar.make(constraintLayout,
-                    R.string.piece_added, Snackbar.LENGTH_LONG).show();
             //listener.onAddEditCompleted(newPieceUri);
             String id = pieceUri.getLastPathSegment();
             if (id != null)
             {
                 return Long.parseLong(id);
             }
-        }
-        else {
-            Snackbar.make(constraintLayout,
-                    R.string.piece_not_added, Snackbar.LENGTH_LONG).show();
         }
 
         return -1;
@@ -340,15 +425,6 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         // insert on the PianoRepertoireRecordingsContentProvider
         mNewRecordingUri = getContentResolver().insert(
                 DatabaseDescription.Recording.CONTENT_URI, contentValues);
-
-        if (mNewRecordingUri != null) {
-            Snackbar.make(constraintLayout,
-                    R.string.recording_added, Snackbar.LENGTH_LONG).show();
-        }
-        else {
-            Snackbar.make(constraintLayout,
-                    R.string.recording_not_added, Snackbar.LENGTH_LONG).show();
-        }
     }
 
     private void writeAudioDataToFile() {

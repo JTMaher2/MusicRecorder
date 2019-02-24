@@ -381,7 +381,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                         null, // no selection arguments
                         null); // sort order
 
-                break;
+
         }
 
         return cursorLoader;
