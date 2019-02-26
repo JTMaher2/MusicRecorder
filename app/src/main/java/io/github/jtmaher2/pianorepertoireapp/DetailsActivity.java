@@ -233,7 +233,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         @Override
         public void run() {
-            runOnUiThread(() -> mFavoriteStar.setEnabled(true)); // re-enable selecting
+            runOnUiThread(() -> {
+                mFavoriteStar.setEnabled(true);
+            }); // re-enable selecting
         }
     }
 
@@ -388,6 +390,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     }
 
     private View.OnTouchListener mFavoriteStarTouchListener = (v, me) -> {
+        v.performClick(); // call performClick when a click is detected
+
         if (!mFavoriteChanged) {
             ContentValues vals = new ContentValues();
             RatingBar rb = (RatingBar) v;
@@ -412,16 +416,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             }
 
             mFavoriteChanged = true;
+
+            // prevent favorite star from being clicked multiple times at once
+            mFavoriteStar.setEnabled(false); // remove the listener
+
+            mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
+        } else {
+            mFavoriteChanged = false;
         }
 
-        v.performClick();
-
-        // prevent favorite star from being clicked multiple times at once
-        mFavoriteStar.setEnabled(false); // remove the listener
-
-        mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
-
-        return mFavoriteChanged;
+        return !mFavoriteChanged;
     };
 
     // called by LoaderManager when loading completes
@@ -476,7 +480,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                             float newFav = data.getFloat(favoriteIndex);
                             mFavoriteStar.setRating(newFav);
                             mRecFavs.set(mRecsSpinner.getSelectedItemPosition(), newFav);
-                            mFavoriteChanged = false;
+                            //mFavoriteChanged = false;
                         } else { // nothing was changed
                             if (mRecRatings.size() < mRecsSpinnerElems.size()) {
                                 mRecRatings.add(data.getFloat(ratingIndex));
