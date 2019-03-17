@@ -27,6 +27,7 @@ import java.util.Arrays;
 
 public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecyclerViewAdapter.MyViewHolder> {
     private final String[] mDataset;
+    private final int mPieceId;
     private final Context mContext;
     private static final int DIALOG_REQUEST_CODE = 9001;
     private static final int NUM_BYTES_PER_READ = 100;
@@ -60,8 +61,9 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
         }
     }
 
-    MyTimesRecyclerViewAdapter(String[] myDataset, Context context, int[] startTimes, int[] endTimes) {
+    MyTimesRecyclerViewAdapter(String[] myDataset, int pieceId, Context context, int[] startTimes, int[] endTimes) {
         mDataset = myDataset;
+        mPieceId = pieceId;
         mContext = context;
         mStartTimes = startTimes;
         mEndTimes = endTimes;
@@ -84,18 +86,18 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
         mAt.flush();
 
         previewBtn.setText("Preview");
-        previewBtn.setOnClickListener((view) -> playRec(pos, mDataset[pos], previewBtn));
+        previewBtn.setOnClickListener((view) -> playRec(pos, previewBtn));
     }
 
     // play a selected recording
-    private void playRec(int pos, String recName, Button previewBtn)
+    private void playRec(int pos, Button previewBtn)
     {
         previewBtn.setText("Stop");
         previewBtn.setOnClickListener((view)-> stopPlaying(pos, previewBtn));
 
         byte[] byteData = null;
         File file = null;
-        file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + recName);
+        file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId  + "/" + mDataset[pos]);
 
         // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
@@ -161,7 +163,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
                         public void run() {
 
                             previewBtn.setText("Preview");
-                            previewBtn.setOnClickListener((view) -> playRec(pos, mDataset[pos], previewBtn));
+                            previewBtn.setOnClickListener((view) -> playRec(pos, previewBtn));
 
                         }
                     });
@@ -212,7 +214,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
 
         Button previewBtn = holder.mLinearLayout.findViewById(R.id.preview_button);
         previewBtn.setOnClickListener(view -> {
-            playRec(pos, mDataset[pos], previewBtn);
+            playRec(pos, previewBtn);
         });
 
     }

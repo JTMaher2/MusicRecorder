@@ -55,7 +55,7 @@ public class DatabaseDescription {
 
     // nested class defines contents of the recordings table-
     public static final class Recording implements BaseColumns {
-        static final String TABLE_NAME = "recordings"; // table's name
+        public static final String TABLE_NAME = "recordings"; // table's name
 
         // Uri for the recordings table
         public static final Uri CONTENT_URI =

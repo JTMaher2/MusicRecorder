@@ -263,7 +263,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         mDelRecBtn = findViewById(R.id.del_rec_btn);
         mDelRecBtn.setOnClickListener(v -> {
             String remixName = mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition());
-            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + remixName);
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + remixName);
             boolean deleted = file.delete();
             if (deleted) {
                 int dbDeleted = getContentResolver().delete(DatabaseDescription.Recording.buildRecordingUriForRecWithName(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), remixName), null, null);
@@ -445,7 +445,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 mNotesTv.setText(data.getString(notesIndex));
             } else {
                 String recOrRem = data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_REC_OR_REM));
-                if (recOrRem.equals("rec")) { // LOADER_TYPE_REMIX
+                if (recOrRem.equals("rec")) { // LOADER_TYPE_RECORDING
                     // enable delete button, favorite star, and rating bar (if they are not already enabled)
                     mDelRecBtn.setClickable(true);
                     mFavoriteStar.setIsIndicator(false);

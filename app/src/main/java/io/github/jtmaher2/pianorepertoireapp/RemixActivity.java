@@ -47,7 +47,8 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
     private static final int BUFFERED_INPUT_STREAM_SIZE = 16384;
     private static final int BYTE_READ_LEN = 1000000;
     private static final String TAG = "RemixActivity";
-    private String mCombinedName, mPieceId;
+    private String mCombinedName;
+    long mPieceId;
     private ConstraintLayout mConstraintLayout;
     private ArrayList<Uri> mPieceRemixes;
     private Uri mPieceUri;
@@ -61,7 +62,7 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
         byte[] byteData = null,
                 copy = null;
         File file = null;
-        file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + recName);
+        file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + recName);
 
         // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
@@ -87,7 +88,7 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
             FileInputStream in = new FileInputStream( file );
             BufferedInputStream bis = new BufferedInputStream(in, BUFFERED_INPUT_STREAM_SIZE);
             DataInputStream dis = new DataInputStream(bis);
-            File fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + combinedName + ".pcm");
+            File fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/" + combinedName + ".pcm");
             FileOutputStream out = new FileOutputStream(fileOut, true);
             BufferedOutputStream bos = new BufferedOutputStream(out);
             DataOutputStream dos = new DataOutputStream(bos);
@@ -98,7 +99,10 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
             int numSecToPlay = endSec - startSec;
             double recSecLen = bufSize / BYTES_PER_SEC; // recording total # of seconds
             int bytesToPlay = (int)Math.round((numSecToPlay / recSecLen) * bufSize); // the number of bytes to read for the specified length
-
+            if (bytesToPlay > byteData.length)
+            {
+                bytesToPlay = byteData.length; // prevent out of bounds exception
+            }
             int numBytesWritten = 0;
             do {
                 int bytesToWrite;
@@ -183,7 +187,7 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
         mPieceRemixes = callingIntent.getParcelableArrayListExtra(EXISTING_PIECE_REMS);
         mPieceUri = callingIntent.getParcelableExtra(EXISTING_PIECE_URI);
         int pieceId = callingIntent.getIntExtra(PIECE_ID, -1);
-
+        mPieceId = pieceId;
         if (pieceRecordings != null) {
             int numPieces = pieceRecordings.size();
             mStartTimes = new int[numPieces];
@@ -192,44 +196,47 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
             Button combineButton = findViewById(R.id.combine_btn);
             combineButton.setOnClickListener((view) -> {
                 mCombinedName = ((EditText) findViewById(R.id.combine_edittext)).getText().toString();
-                // delete existing file (if any)
-                File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mCombinedName + ".pcm");
-                boolean deleted = file.delete();
-                if (!deleted) {
-                    Log.e(TAG, "Unable to delete file " + mCombinedName);
+                // prevent saving if there is already remix with this name
+                File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + mCombinedName + ".pcm");
+                if (!file.exists()) {
+                    // select each recording from the start time to the end time
+                    for (int c = 0; c < mRecyclerView.getChildCount(); c++) {
+                        View child = mRecyclerView.getChildAt(c);
+                        String childName = ((TextView) child.findViewById(R.id.rec_start_label)).getText().toString();
+                        childName = childName.substring(0, childName.indexOf(" "));
+                        String childStartTime = ((TextView) child.findViewById(R.id.rec_start_time_textview)).getText().toString();
+                        int startColonIdx = childStartTime.indexOf(":"),
+                                secondStartColonIdx = childStartTime.lastIndexOf(":");
+                        int startMin = Integer.parseInt(childStartTime.substring(startColonIdx + 1, secondStartColonIdx)),
+                                startSec = Integer.parseInt(childStartTime.substring(secondStartColonIdx + 1));
+                        startSec = startMin * NUM_SECS_IN_MIN + startSec;
+                        String childEndTime = ((TextView) child.findViewById(R.id.rec_end_time_textview)).getText().toString();
+                        int endColonIdx = childEndTime.indexOf(":"),
+                                secondEndColonIdx = childEndTime.lastIndexOf(":");
+                        int endMin = Integer.parseInt(childStartTime.substring(endColonIdx + 1, secondEndColonIdx)),
+                                endSec = Integer.parseInt(childEndTime.substring(secondEndColonIdx + 1));
+                        endSec = endMin * NUM_SECS_IN_MIN + endSec;
+
+                        // load the recording
+                        playRec(childName, mCombinedName, startSec, endSec);
+                    }
+
+                    saveRemixFileName(pieceId); // save to Remixes table
+
+                    Intent allRemixesActivity = new Intent(getApplicationContext(), RemixActivityDetails.class); // go back
+                    allRemixesActivity.putExtra(EXISTING_PIECE_RECS, pieceRecordings);
+                    allRemixesActivity.putExtra(EXISTING_PIECE_REMS, mPieceRemixes);
+                    allRemixesActivity.putExtra(PIECE_ID, pieceId);
+                    allRemixesActivity.putExtra(EXISTING_PIECE_URI, mPieceUri);
+                    startActivity(allRemixesActivity);
+                } else {
+                    Snackbar.make(mConstraintLayout,
+                            "There is already a remix with this name.", Snackbar.LENGTH_LONG).show();
                 }
-                // select each recording from the start time to the end time
-                for (int c = 0; c < mRecyclerView.getChildCount(); c++) {
-                    View child = mRecyclerView.getChildAt(c);
-                    String childName = ((TextView) child.findViewById(R.id.rec_start_label)).getText().toString();
-                    childName = childName.substring(0, childName.indexOf(" "));
-                    String childStartTime = ((TextView) child.findViewById(R.id.rec_start_time_textview)).getText().toString();
-                    int startColonIdx = childStartTime.indexOf(":");
-                    int startMin = Integer.parseInt(childStartTime.substring(0, startColonIdx)),
-                            startSec = Integer.parseInt(childStartTime.substring(startColonIdx + 1));
-                    startSec = startMin * NUM_SECS_IN_MIN + startSec;
-                    String childEndTime = ((TextView) child.findViewById(R.id.rec_end_time_textview)).getText().toString();
-                    int endColonIdx = childEndTime.indexOf(":");
-                    int endMin = Integer.parseInt(childEndTime.substring(0, endColonIdx)),
-                            endSec = Integer.parseInt(childEndTime.substring(endColonIdx + 1));
-                    endSec = endMin * NUM_SECS_IN_MIN + endSec;
-
-                    // load the recording
-                    playRec(childName, mCombinedName, startSec, endSec);
-                }
-
-                saveRemixFileName(pieceId); // save to Remixes table
-
-                Intent allRemixesActivity = new Intent(getApplicationContext(), RemixActivityDetails.class); // go back
-                allRemixesActivity.putExtra(EXISTING_PIECE_RECS, pieceRecordings);
-                allRemixesActivity.putExtra(EXISTING_PIECE_REMS, mPieceRemixes);
-                allRemixesActivity.putExtra(PIECE_ID, pieceId);
-                allRemixesActivity.putExtra(EXISTING_PIECE_URI, mPieceUri);
-                startActivity(allRemixesActivity);
             });
 
             mRecyclerView.setAdapter(new MyTimesRecyclerViewAdapter(
-                    Arrays.copyOf(pieceRecordingNames.toArray(), numPieces, String[].class), this, mStartTimes, mEndTimes));
+                    Arrays.copyOf(pieceRecordingNames.toArray(), numPieces, String[].class), pieceId,this, mStartTimes, mEndTimes));
         }
     }
 
