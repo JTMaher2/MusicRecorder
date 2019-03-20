@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.BufferedInputStream;
@@ -53,11 +54,11 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
     private double mBytesToPlay;
 
     class MyViewHolder extends RecyclerView.ViewHolder {
-        final LinearLayout mLinearLayout;
+        final ScrollView mScrollView;
 
-        MyViewHolder(LinearLayout l) {
-            super(l);
-            mLinearLayout = l;
+        MyViewHolder(ScrollView s) {
+            super(s);
+            mScrollView = s;
         }
     }
 
@@ -72,7 +73,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
     @NonNull
     @Override
     public MyTimesRecyclerViewAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new MyViewHolder((LinearLayout)LayoutInflater.from(parent.getContext())
+        return new MyViewHolder((ScrollView)LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.fragment_remix_pieces, parent, false));
     }
 
@@ -180,11 +181,11 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
     @Override
     public void onBindViewHolder(@NonNull final MyViewHolder holder, final int position) {
         int pos = holder.getAdapterPosition();
-        ((TextView)holder.mLinearLayout.findViewById(R.id.rec_start_label)).setText(String.format(mContext.getString(R.string.recording_start), mDataset[pos]));
+        ((TextView)holder.mScrollView.findViewById(R.id.rec_start_label)).setText(String.format(mContext.getString(R.string.recording_start), mDataset[pos]));
 
-        ((TextView)holder.mLinearLayout.findViewById(R.id.rec_end_label)).setText(String.format(mContext.getString(R.string.recording_end), mDataset[pos]));
+        ((TextView)holder.mScrollView.findViewById(R.id.rec_end_label)).setText(String.format(mContext.getString(R.string.recording_end), mDataset[pos]));
 
-        Button pickStartBtn = holder.mLinearLayout.findViewById(R.id.pick_start_btn);
+        Button pickStartBtn = holder.mScrollView.findViewById(R.id.pick_start_btn);
         pickStartBtn.setOnClickListener(view -> {
             /*Intent i = new Intent(mContext, TimePickerFragment.class);
             i.putExtra(TIME_PICKER_TYPE, "start");
@@ -198,7 +199,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
             newFragment.show(fragActivity.getSupportFragmentManager(), "");
         });
 
-        Button pickEndBtn = holder.mLinearLayout.findViewById(R.id.pick_end_btn);
+        Button pickEndBtn = holder.mScrollView.findViewById(R.id.pick_end_btn);
         pickEndBtn.setOnClickListener(view -> {
             /*Intent i = new Intent(mContext, TimePickerFragment.class);
             i.putExtra(TIME_PICKER_TYPE, "end");
@@ -212,7 +213,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
             newFragment.show(fragActivity.getSupportFragmentManager(), "");
         });
 
-        Button previewBtn = holder.mLinearLayout.findViewById(R.id.preview_button);
+        Button previewBtn = holder.mScrollView.findViewById(R.id.preview_button);
         previewBtn.setOnClickListener(view -> {
             playRec(pos, previewBtn);
         });
