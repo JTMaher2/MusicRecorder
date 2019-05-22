@@ -2,9 +2,6 @@ package io.github.jtmaher2.pianorepertoireapp;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.media.AudioAttributes;
-import android.media.AudioFormat;
-import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -29,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 
@@ -62,9 +58,17 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
         byte[] byteData = null,
                 copy = null;
         File file = null;
+        new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/").mkdir(); // make dir for this piano repertoire app
+
+        new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/").mkdir(); // make dir for this piece
+
         file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + recName);
 
-        // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+        try {
+            if (!file.exists()) {
+                boolean fileCreated = file.createNewFile();
+                if (fileCreated) {
+                    // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
         /*AudioTrack at = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
@@ -80,61 +84,66 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
                         AudioFormat.ENCODING_PCM_8BIT))
                 .build();*/
 
-        int i = 0;
-        int bufSize = (int) file.length();
+                    int i = 0;
+                    int bufSize = (int) file.length();
 
-        try
-        {
-            FileInputStream in = new FileInputStream( file );
-            BufferedInputStream bis = new BufferedInputStream(in, BUFFERED_INPUT_STREAM_SIZE);
-            DataInputStream dis = new DataInputStream(bis);
-            File fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/" + combinedName + ".pcm");
-            FileOutputStream out = new FileOutputStream(fileOut, true);
-            BufferedOutputStream bos = new BufferedOutputStream(out);
-            DataOutputStream dos = new DataOutputStream(bos);
-            byteData = new byte[dis.available()];
+                    try
+                    {
+                        FileInputStream in = new FileInputStream( file );
+                        BufferedInputStream bis = new BufferedInputStream(in, BUFFERED_INPUT_STREAM_SIZE);
+                        DataInputStream dis = new DataInputStream(bis);
+                        File fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/" + combinedName + ".pcm");
+                        FileOutputStream out = new FileOutputStream(fileOut, true);
+                        BufferedOutputStream bos = new BufferedOutputStream(out);
+                        DataOutputStream dos = new DataOutputStream(bos);
+                        byteData = new byte[dis.available()];
 
-            int numSkipped = dis.skipBytes((int)Math.round(BYTES_PER_SEC * startSec)); // skip the first N seconds, where N is the start time for this rec
-            //at.play();
-            int numSecToPlay = endSec - startSec;
-            double recSecLen = bufSize / BYTES_PER_SEC; // recording total # of seconds
-            int bytesToPlay = (int)Math.round((numSecToPlay / recSecLen) * bufSize); // the number of bytes to read for the specified length
-            if (bytesToPlay > byteData.length)
-            {
-                bytesToPlay = byteData.length; // prevent out of bounds exception
-            }
-            int numBytesWritten = 0;
-            do {
-                int bytesToWrite;
+                        int numSkipped = dis.skipBytes((int)Math.round(BYTES_PER_SEC * startSec)); // skip the first N seconds, where N is the start time for this rec
+                        //at.play();
+                        int numSecToPlay = endSec - startSec;
+                        double recSecLen = bufSize / BYTES_PER_SEC; // recording total # of seconds
+                        int bytesToPlay = (int)Math.round((numSecToPlay / recSecLen) * bufSize); // the number of bytes to read for the specified length
+                        if (bytesToPlay > byteData.length)
+                        {
+                            bytesToPlay = byteData.length; // prevent out of bounds exception
+                        }
+                        int numBytesWritten = 0;
+                        do {
+                            int bytesToWrite;
 
-                if (numBytesWritten + BYTE_READ_LEN <= bytesToPlay)
-                {
-                    bytesToWrite = BYTE_READ_LEN;
-                }
-                else
-                {
-                    bytesToWrite = bytesToPlay - numBytesWritten;
-                }
+                            if (numBytesWritten + BYTE_READ_LEN <= bytesToPlay)
+                            {
+                                bytesToWrite = BYTE_READ_LEN;
+                            }
+                            else
+                            {
+                                bytesToWrite = bytesToPlay - numBytesWritten;
+                            }
 
-                i = dis.read(byteData, 0, bytesToWrite);
-                dos.write(byteData, 0, i);
-                numBytesWritten += bytesToWrite;
-            } while (i > -1 && numBytesWritten < bytesToPlay);
+                            i = dis.read(byteData, 0, bytesToWrite);
+                            dos.write(byteData, 0, i);
+                            numBytesWritten += bytesToWrite;
+                        } while (i > -1 && numBytesWritten < bytesToPlay);
 
              /*{
 
                 numBytesWritten++;
             }*/
-            //at.stop();
-            //at.release();
-            dos.close();
-            bos.close();
-            out.close();
-            dis.close();
-            bis.close();
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+                        //at.stop();
+                        //at.release();
+                        dos.close();
+                        bos.close();
+                        out.close();
+                        dis.close();
+                        bis.close();
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.getStackTrace()[0].toString());
         }
     }
 

@@ -514,8 +514,9 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                 recorder.read(sData, 0, BufferElements2Rec);
                 try {
                     byte bData[] = short2byte(sData);
-                    assert os != null;
-                    os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+                    if (os != null) {
+                        os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

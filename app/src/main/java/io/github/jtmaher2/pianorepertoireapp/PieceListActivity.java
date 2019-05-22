@@ -20,10 +20,10 @@ import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
 
 public class PieceListActivity extends AppCompatActivity {
-
+    private PianoRepertoireDatabaseHelper mDbHelper;
     // determine if a recording with a specific name is the first recording for a piece with a particular ID
     private boolean isFirstRec(String rec) {
-        ArrayList<Uri> allFirstRecs = DatabaseDescription.Recording.buildDistinctRecordingUris(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase());
+        ArrayList<Uri> allFirstRecs = DatabaseDescription.Recording.buildDistinctRecordingUris(mDbHelper.getReadableDatabase());
 
         for (Uri recUri : allFirstRecs) {
             // query URI for file name
@@ -47,6 +47,7 @@ public class PieceListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_piece_list);
         RecyclerView mRecyclerView = findViewById(R.id.my_recycler_view);
+        mDbHelper = new PianoRepertoireDatabaseHelper(this);
         mRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -62,7 +63,7 @@ public class PieceListActivity extends AppCompatActivity {
                 }
             }
         }
-        ArrayList<Uri> pieceUris = DatabaseDescription.Piece.buildPieceUris(new PianoRepertoireDatabaseHelper(this).getReadableDatabase());
+        ArrayList<Uri> pieceUris = DatabaseDescription.Piece.buildPieceUris(mDbHelper.getReadableDatabase());
         ArrayList<String> pieceNames = new ArrayList<>();
         ContentResolver contentResolver = getContentResolver();
         Cursor c;
@@ -83,5 +84,11 @@ public class PieceListActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.new_rec_btn);
         fab.setOnClickListener(view -> startActivity(new Intent(getApplicationContext(), NewRecordingActivity.class)));
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDbHelper.close();
+        super.onDestroy();
     }
 }

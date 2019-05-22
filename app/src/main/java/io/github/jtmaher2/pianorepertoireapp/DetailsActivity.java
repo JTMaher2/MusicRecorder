@@ -24,8 +24,11 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -393,34 +396,84 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         v.performClick(); // call performClick when a click is detected
 
         if (!mFavoriteChanged) {
-            ContentValues vals = new ContentValues();
-            RatingBar rb = (RatingBar) v;
-            float rating = rb.getRating();
-            if (rating == 1.0f) {
-                vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
-                rb.setRating(0.0f);
+            // un-favorite previous favorite (if any)
+            Uri prevFav = DatabaseDescription.Recording.buildFavoriteUriForPiece(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), mPieceId);
+            String prevFavId = prevFav.getLastPathSegment();
+            if (prevFavId != null && Integer.parseInt(prevFavId) > -1) {
+                // if there is another recording that is a favorite
+                ContentValues unfavVals = new ContentValues();
+                unfavVals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, 0);
+                int unfavorited = getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, unfavVals, DatabaseDescription.Recording._ID + "=?", new String[]{prevFavId});
+                if (unfavorited == 1) {
+                    // favorite the current recording
+                    ContentValues vals = new ContentValues();
+                    RatingBar rb = (RatingBar) v;
+                    float rating = rb.getRating();
+                    if (rating == 1.0f) {
+                        vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, 0);
+                        rb.setRating(0.0f);
+                    } else {
+                        vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, 1);
+                        rb.setRating(1.0f);
+                    }
+
+                    //int recPos = mRecsSpinner.getSelectedItemPosition();
+                    if (mRecsSpinner != null && mRecsSpinner.getChildCount() > 0) {
+                        LinearLayout selectedSpinnerLayout = (LinearLayout) mRecsSpinner.getChildAt(0/*recPos*/);
+                        if (selectedSpinnerLayout != null && selectedSpinnerLayout.getChildCount() > 0) {
+                            String recName = ((TextView) (selectedSpinnerLayout).getChildAt(0)).getText().toString();
+
+                            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + recName + "'", null, null, null);
+                            if (c != null) {
+                                c.moveToFirst();
+                                int recId = c.getInt(0);
+                                int numRowsUpdated = getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
+                                c.close();
+                            }
+                        }
+                    }
+
+                    mFavoriteChanged = true; // the favorite has been changed
+
+                    // prevent favorite star from being clicked multiple times at once
+                    mFavoriteStar.setEnabled(false); // remove the listener
+
+                    mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
+                } else {
+                    // error occurred
+                    Toast.makeText(this, "Error while un-favoriting recording #" + prevFavId, Toast.LENGTH_LONG).show();
+                    mFavoriteChanged = false;
+                }
             } else {
-                vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, true);
-                rb.setRating(1.0f);
+                // there is no other recording that is a favorite
+                // favorite the current recording
+                ContentValues vals = new ContentValues();
+                RatingBar rb = (RatingBar) v;
+                float rating = rb.getRating();
+                if (rating == 1.0f) {
+                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, 0);
+                    rb.setRating(0.0f);
+                } else {
+                    vals.put(DatabaseDescription.Recording.COLUMN_FAVORITE, 1);
+                    rb.setRating(1.0f);
+                }
+
+                int recPos = mRecsSpinner.getSelectedItemPosition();
+                Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(recPos) + "'", null, null, null);
+                if (c != null) {
+                    c.moveToFirst();
+                    int recId = c.getInt(0);
+                    int numRowsUpdated = getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
+                    c.close();
+                }
+
+                mFavoriteChanged = true; // the favorite has been changed
+
+                // prevent favorite star from being clicked multiple times at once
+                mFavoriteStar.setEnabled(false); // remove the listener
+
+                mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
             }
-
-            int recPos = mRecsSpinner.getSelectedItemPosition();
-
-            Cursor c = getContentResolver().query(DatabaseDescription.Recording.CONTENT_URI, new String[]{DatabaseDescription.Recording._ID}, DatabaseDescription.Recording.COLUMN_FILE_NAME + " = '" + mRecsSpinnerElems.get(recPos) + "'", null, null, null);
-
-            if (c != null) {
-                c.moveToFirst();
-                int recId = c.getInt(0);
-                getContentResolver().update(DatabaseDescription.Recording.CONTENT_URI, vals, DatabaseDescription.Recording._ID + "=?", new String[]{String.valueOf(recId)}); // get position of selected item
-                c.close();
-            }
-
-            mFavoriteChanged = true;
-
-            // prevent favorite star from being clicked multiple times at once
-            mFavoriteStar.setEnabled(false); // remove the listener
-
-            mFavoriteStarTimer.schedule(new MyTimerTask(), ONE_SECOND);
         } else {
             mFavoriteChanged = false;
         }
@@ -455,7 +508,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                     if (mSelectedItem == null || data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)).equals(mSelectedItem)) {
                         if (mRecsSpinnerElems.size() < mRecordingUris.size()) {
                             mRecsSpinnerElems.add(data.getString(data.getColumnIndex(DatabaseDescription.Recording.COLUMN_FILE_NAME)));
-
                         }
 
                         if (mRecsSpinner.getAdapter() == null && mRecsSpinnerElems.size() == mRecordingUris.size()) {
@@ -479,8 +531,17 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                         } else if (mFavoriteChanged) { // favorite was changed
                             float newFav = data.getFloat(favoriteIndex);
                             mFavoriteStar.setRating(newFav);
-                            mRecFavs.set(mRecsSpinner.getSelectedItemPosition(), newFav);
-                            //mFavoriteChanged = false;
+
+                            int curPos = mRecsSpinner.getSelectedItemPosition();
+
+                            mRecFavs.set(curPos, newFav); // star this rec
+
+                            // un-star all other recs
+                            for (int i = 0; i < mRecFavs.size(); i++) {
+                                if (i != curPos) {
+                                    mRecFavs.set(i, 0.0f);
+                                }
+                            }
                         } else { // nothing was changed
                             if (mRecRatings.size() < mRecsSpinnerElems.size()) {
                                 mRecRatings.add(data.getFloat(ratingIndex));

@@ -136,6 +136,18 @@ public class DatabaseDescription {
             recs.close();
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
+
+        // get the Uri of the favorite recording (if any) for a piece
+        public static Uri buildFavoriteUriForPiece(SQLiteDatabase db, int pieceId) {
+            Cursor rec = db.query(DatabaseDescription.Recording.TABLE_NAME, new String[]{Recording._ID}, Recording.COLUMN_PIECE_ID + " = " + pieceId + " AND " + Recording.COLUMN_FAVORITE + " = 1;", null, null, null, null, null); // select recording if any
+            int id = -1;
+            while (rec.moveToNext()) {
+                id = rec.getInt(0);
+            }
+            rec.close();
+            Uri uri = ContentUris.withAppendedId(CONTENT_URI, id);
+            return uri;
+        }
     }
 
     // nested class defines contents of the remixes table
