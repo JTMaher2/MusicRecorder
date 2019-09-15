@@ -43,6 +43,8 @@ import java.util.TimerTask;
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
 
+import static android.graphics.Color.BLACK;
+
 public class DetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
                                                                     AdapterView.OnItemSelectedListener {
     private static final int LOADER_TYPE_PIECE = 0;
@@ -95,6 +97,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             mNotesTv.setEnabled(false);
             mEditBtn.setText(R.string.edit);
             mEditBtn.setBackgroundColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_orange_light, null));
+            mEditBtn.setTextColor(BLACK);
             mUpdateValues.clear();
             mUpdateValues.put(DatabaseDescription.Piece.COLUMN_NAME, mNameTv.getText().toString());
             mUpdateValues.put(DatabaseDescription.Piece.COLUMN_COMPOSER, mComposerTv.getText().toString());
@@ -134,8 +137,10 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         //mAudioTrack.flush();
         //mAudioTrack.stop();
         //mAudioTrack.release();
-        mAudioTrack.pause();
-        mAudioTrack.flush();
+        if (mAudioTrack != null) {
+            mAudioTrack.pause();
+            mAudioTrack.flush();
+        }
 
         mPlayBtn.setText("Play");
         mPlayBtn.setOnClickListener((view) -> playRec());
@@ -190,45 +195,51 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         mPlayBtn.setText("Stop");
         mPlayBtn.setOnClickListener((view)-> stopPlaying());
 
-        File file = null;
-        file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRecsSpinnerElems.get(mRecsSpinner.getSelectedItemPosition()));
+        // get recording inside directory for this piece
+        int mRecsSpinnerPos = mRecsSpinner.getSelectedItemPosition();
+        if (mRecsSpinnerPos > -1) {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + mRecsSpinnerElems.get(mRecsSpinnerPos));
 
-        // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+            // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
 
-        mAudioTrack = new AudioTrack.Builder()
-                .setAudioAttributes(new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build())
-                .setAudioFormat(new AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(SAMPLE_RATE)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
-                        .build())
-                .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO,
-                        AudioFormat.ENCODING_PCM_8BIT))
-                .build();
+            mAudioTrack = new AudioTrack.Builder()
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    .setAudioFormat(new AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setSampleRate(SAMPLE_RATE)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                            .build())
+                    .setBufferSizeInBytes(android.media.AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO,
+                            AudioFormat.ENCODING_PCM_8BIT))
+                    .build();
 
-        mBufSize = (int) file.length();
-        mByteData = new byte[mBufSize];
+            mBufSize = (int) file.length();
+            mByteData = new byte[mBufSize];
 
-        //AudioTrack at = (AudioTrack)params[0];
-        int i = 0;
-        //DataInputStream dis = (DataInputStream)params[1];
-        //byte[] byteData = (byte[])params[2];
-        //int bufSize = (int)params[3];
+            //AudioTrack at = (AudioTrack)params[0];
+            int i = 0;
+            //DataInputStream dis = (DataInputStream)params[1];
+            //byte[] byteData = (byte[])params[2];
+            //int bufSize = (int)params[3];
 
-        try {
-            mFin = new FileInputStream( file );
-            mBis = new BufferedInputStream(mFin, BUFFER_SIZE);
-            mDis = new DataInputStream(mBis);
+            try {
+                mFin = new FileInputStream(file);
+                mBis = new BufferedInputStream(mFin, BUFFER_SIZE);
+                mDis = new DataInputStream(mBis);
 
-            mAudioTrack.play();
+                mAudioTrack.play();
 
-            m_playThread = new Thread(m_playGenerator);
-            m_playThread.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+                m_playThread = new Thread(m_playGenerator);
+                m_playThread.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // invalid recording, do not play
+            stopPlaying();
         }
     }
 
@@ -297,7 +308,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 }
             } else {
                 Snackbar.make(constraintLayout,
-                        R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
+                R.string.recording_not_deleted, Snackbar.LENGTH_LONG).show();
             }
         });
         mDelRecBtn.setClickable(false);

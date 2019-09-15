@@ -172,8 +172,10 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         //mAudioTrack.flush();
         //mAudioTrack.stop();
         //mAudioTrack.release();
-        mAt.pause();
-        mAt.flush();
+        if (mAt != null) {
+            mAt.pause();
+            mAt.flush();
+        }
 
         mPlayBtn.setText("Play");
         mPlayBtn.setOnClickListener((view) -> playRec());
@@ -225,6 +227,8 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            stopPlaying();
         }
     }
 
@@ -274,6 +278,7 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
             public void onClick(View v) {
                 String remixName = mRemixesSpinnerElems.get(mRemixesSpinner.getSelectedItemPosition());
                 File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + remixName);
+
                 boolean deleted = file.delete();
                 if (deleted) {
                     int dbDeleted = getContentResolver().delete(DatabaseDescription.Remix.buildRemixUriForRemixWithName(new PianoRepertoireDatabaseHelper(getApplicationContext()).getReadableDatabase(), remixName), null, null);
@@ -296,7 +301,7 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
                     }
                 } else {
                     Snackbar.make(constraintLayout,
-                            R.string.remix_not_deleted, Snackbar.LENGTH_LONG).show();
+                    R.string.remix_not_deleted, Snackbar.LENGTH_LONG).show();
                 }
             }
         });

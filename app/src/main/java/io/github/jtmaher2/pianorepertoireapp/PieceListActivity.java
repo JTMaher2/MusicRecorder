@@ -55,14 +55,14 @@ public class PieceListActivity extends AppCompatActivity {
                 Environment.getExternalStorageDirectory().getPath() +
                         "/PianoRepertoire/")
                 .list();
-        ArrayList<String> firstRecNames = new ArrayList<>();
+        /*ArrayList<String> firstRecNames = new ArrayList<>();
         if (allRecs != null) {
             for (String rec : allRecs) {
                 if (isFirstRec(rec)) {
                     firstRecNames.add(rec);
                 }
             }
-        }
+        }*/
         ArrayList<Uri> pieceUris = DatabaseDescription.Piece.buildPieceUris(mDbHelper.getReadableDatabase());
         ArrayList<String> pieceNames = new ArrayList<>();
         ContentResolver contentResolver = getContentResolver();

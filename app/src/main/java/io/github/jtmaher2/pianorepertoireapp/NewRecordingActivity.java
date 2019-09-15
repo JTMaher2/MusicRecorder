@@ -481,6 +481,15 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
     {
         long pieceId = savePiece(mForExisting, mExistingPieceUri);
 
+        File appDir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/");
+        if (!appDir.exists()) {
+            boolean dirCreated = appDir.mkdir();
+            if (!dirCreated) {
+                Snackbar.make(constraintLayout,
+                        "error creating directory", Snackbar.LENGTH_LONG).show();
+            }
+        }
+
         File dir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + pieceId + "/");
         if (!dir.exists()) {
             boolean dirCreated = dir.mkdir();
