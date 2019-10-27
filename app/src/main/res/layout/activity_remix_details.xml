@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout android:id="@+id/rem_det_constraint_layout"
+<androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/rem_det_constraint_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="148dp"
         android:layout_marginTop="16dp"
-        android:text="Favorite"
+        android:text="@string/favorite"
         app:layout_constraintStart_toStartOf="@+id/detailsRatingBar"
         app:layout_constraintTop_toBottomOf="@+id/detailsRatingBar" />
 
@@ -24,7 +24,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Rating"
+        android:text="@string/rating"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/detailsRatingBar"
         app:layout_constraintHorizontal_bias="1.0"
@@ -39,7 +39,7 @@
         android:layout_marginTop="52dp"
         android:layout_marginEnd="8dp"
         android:background="@color/colorPrimaryDark"
-        android:text="New Remix"
+        android:text="@string/new_remix"
         android:textColor="@android:color/background_light"
         app:layout_constraintEnd_toEndOf="@+id/detailsFavoriteStar"
         app:layout_constraintHorizontal_bias="0.495"
@@ -51,7 +51,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Remix Details"
+        android:text="@string/remix_details"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -62,7 +62,7 @@
         android:layout_width="wrap_content"
         android:layout_height="26dp"
         android:layout_marginTop="8dp"
-        android:text="Remixes"
+        android:text="@string/remixes"
         app:layout_constraintLeft_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView9"
         tools:layout_editor_absoluteX="147dp" />
@@ -109,7 +109,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Play"
+        android:text="@string/play"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.893"
         app:layout_constraintStart_toStartOf="parent"
@@ -123,7 +123,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Delete"
+        android:text="@string/delete"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.895"
@@ -131,4 +131,4 @@
         app:layout_constraintTop_toBottomOf="@+id/play_btn"
         app:layout_constraintVertical_bias="0.091" />
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

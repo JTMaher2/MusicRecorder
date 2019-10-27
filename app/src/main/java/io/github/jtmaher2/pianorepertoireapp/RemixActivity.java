@@ -3,13 +3,14 @@ package io.github.jtmaher2.pianorepertoireapp;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -68,7 +69,7 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
             if (!file.exists()) {
                 boolean fileCreated = file.createNewFile();
                 if (fileCreated) {
-                    // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+                    // for ex. path= "/sdcard/samplesound.ogg" or "/sdcard/samplesound.webm"
 
         /*AudioTrack at = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
@@ -92,7 +93,12 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
                         FileInputStream in = new FileInputStream( file );
                         BufferedInputStream bis = new BufferedInputStream(in, BUFFERED_INPUT_STREAM_SIZE);
                         DataInputStream dis = new DataInputStream(bis);
-                        File fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/" + combinedName + ".pcm");
+                        File fileOut;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/" + combinedName + ".ogg");
+                        } else {
+                            fileOut = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire/" + mPieceId + "/" + combinedName + ".webm");
+                        }
                         FileOutputStream out = new FileOutputStream(fileOut, true);
                         BufferedOutputStream bos = new BufferedOutputStream(out);
                         DataOutputStream dos = new DataOutputStream(bos);
@@ -154,8 +160,13 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
 
         contentValues.put(DatabaseDescription.Remix.COLUMN_PIECE_ID,
                 pieceId);
-        contentValues.put(DatabaseDescription.Remix.COLUMN_FILE_NAME,
-                mCombinedName + ".pcm");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            contentValues.put(DatabaseDescription.Remix.COLUMN_FILE_NAME,
+                    mCombinedName + ".ogg");
+        } else {
+            contentValues.put(DatabaseDescription.Remix.COLUMN_FILE_NAME,
+                    mCombinedName + ".webm");
+        }
         contentValues.put(DatabaseDescription.Remix.COLUMN_RATING, 0);
         contentValues.put(DatabaseDescription.Remix.COLUMN_FAVORITE, false);
         contentValues.put(DatabaseDescription.Remix.COLUMN_REC_OR_REM, "rem"); // it's a remix
@@ -206,7 +217,12 @@ public class RemixActivity extends AppCompatActivity implements TimePickerFragme
             combineButton.setOnClickListener((view) -> {
                 mCombinedName = ((EditText) findViewById(R.id.combine_edittext)).getText().toString();
                 // prevent saving if there is already remix with this name
-                File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + mCombinedName + ".pcm");
+                File file;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + mCombinedName + ".ogg");
+                } else {
+                    file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + mCombinedName + ".webm");
+                }
                 if (!file.exists()) {
                     // select each recording from the start time to the end time
                     for (int c = 0; c < mRecyclerView.getChildCount(); c++) {

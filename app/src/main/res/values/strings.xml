@@ -20,7 +20,6 @@
     <string name="notes_with_colon">Notes:</string>
     <string name="notes">Notes</string>
     <string name="favorite_recording_with_colon">Favorite Recording:</string>
-    <string name="favorite">Favorite</string>
     <string name="edit">Edit</string>
     <string name="details">Details</string>
     <string name="recordings">Recordings</string>
@@ -37,4 +36,12 @@
     <string name="recording_deleted">Recording Deleted</string>
     <string name="recording_not_deleted">Recording Not Deleted</string>
     <string name="hr_min_sec">%1$d:%2$d:%3$d</string>
+    <string name="favorite">Favorite</string>
+    <string name="rating">Rating</string>
+    <string name="new_remix">New Remix</string>
+    <string name="remix_details">Remix Details</string>
+    <string name="remixes">Remixes</string>
+    <string name="play">Play</string>
+    <string name="delete">Delete</string>
+    <string name="combine">Combine</string>
 </resources>

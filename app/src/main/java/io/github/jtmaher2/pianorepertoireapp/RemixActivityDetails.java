@@ -3,34 +3,31 @@ package io.github.jtmaher2.pianorepertoireapp;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -43,7 +40,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
-import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireContentProvider;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
 
 public class RemixActivityDetails extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
@@ -191,7 +187,7 @@ public class RemixActivityDetails extends AppCompatActivity implements LoaderMan
         if (remixPos > -1) {
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mRemixesSpinnerElems.get(remixPos));
 
-            // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+            // for ex. path= "/sdcard/samplesound.ogg" or "/sdcard/samplesound.webm"
 
             mAt = new AudioTrack.Builder()
                     .setAudioAttributes(new AudioAttributes.Builder()

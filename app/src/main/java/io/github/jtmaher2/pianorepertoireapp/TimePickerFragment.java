@@ -4,12 +4,11 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
 
 
 import com.ikovac.timepickerwithseconds.MyTimePickerDialog;
-import com.ikovac.timepickerwithseconds.TimePicker;
 
 import java.text.SimpleDateFormat;
 
@@ -22,7 +21,7 @@ public class TimePickerFragment extends DialogFragment {
         void onTimeSet(com.ikovac.timepickerwithseconds.TimePicker view, int hourOfDay, int minute, int second, String startOrEnd, int childIdx);
     }
 
-    OnTimeDialogListener mListener;
+    private OnTimeDialogListener mListener;
     private Context mContext;
     @Override
     public void onAttach(Activity activity) {

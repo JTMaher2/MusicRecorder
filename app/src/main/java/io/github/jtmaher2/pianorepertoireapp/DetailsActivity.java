@@ -10,14 +10,14 @@ import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -200,7 +200,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         if (mRecsSpinnerPos > -1) {
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId + "/" + mRecsSpinnerElems.get(mRecsSpinnerPos));
 
-            // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+            // for ex. path= "/sdcard/samplesound.ogg" or "/sdcard/samplesound.webm"
 
             mAudioTrack = new AudioTrack.Builder()
                     .setAudioAttributes(new AudioAttributes.Builder()

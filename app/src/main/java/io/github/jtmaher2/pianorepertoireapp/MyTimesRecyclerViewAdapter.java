@@ -6,16 +6,15 @@ import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -24,7 +23,6 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecyclerViewAdapter.MyViewHolder> {
     private final String[] mDataset;
@@ -100,7 +98,7 @@ public class MyTimesRecyclerViewAdapter extends RecyclerView.Adapter<MyTimesRecy
         File file = null;
         file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/PianoRepertoire/" + mPieceId  + "/" + mDataset[pos]);
 
-        // for ex. path= "/sdcard/samplesound.pcm" or "/sdcard/samplesound.wav"
+        // for ex. path= "/sdcard/samplesound.ogg" or "/sdcard/samplesound.webm"
 
         mAt = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()

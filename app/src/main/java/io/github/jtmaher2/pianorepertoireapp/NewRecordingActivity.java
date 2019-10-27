@@ -5,41 +5,34 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteCursorDriver;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQuery;
 import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.BaseTransientBottomBar;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.Loader;
-import android.support.v7.app.AppCompatActivity;
-import android.telecom.Call;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+
+import com.google.android.material.snackbar.Snackbar;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,8 +41,10 @@ import io.github.jtmaher2.pianorepertoireapp.data.DatabaseDescription;
 import io.github.jtmaher2.pianorepertoireapp.data.PianoRepertoireDatabaseHelper;
 
 public class NewRecordingActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
-
+    private static final String TAG = "NewRecordingActivity";
     private static final int RECORDER_SAMPLERATE = 44100;
+    private static final int NUM_CHANNELS = 2;
+    private static final int BITRATE = 128000;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 0;
@@ -73,18 +68,17 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
 
     private int mPieceId;
 
-    private final int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
+    private final int BUFFER_ELEMENTS_2_REC = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
     private final int BytesPerElement = 2; // 2 bytes in 16bit format
     private Thread recordingThread = null;
     private boolean isRecording = false;
-    private AudioRecord recorder;
+    private /*AudioRecord*/MediaRecorder recorder;
     private static Timer timer;
     private TextView timerTv, pieceNameTv, composerTv, notesTv;
     private ConstraintLayout constraintLayout;
     private static final String EXISTING_PIECE_URI = "existing_piece_uri";
     private static final String FOR_EXISTING = "for_existing";
     private boolean m_RecordingsDirCreated;
-    private File m_RecordingsDir;
 
     private String mPieceName;
     private boolean mForExisting;
@@ -110,7 +104,9 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         // stops the recording activity
         if (null != recorder) {
             isRecording = false;
-            recorder.stop();
+            if (!forExisting) {
+                recorder.stop();
+            }
             recorder.release();
             recorder = null;
             recordingThread = null;
@@ -126,20 +122,15 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                         public void onDismissed(Snackbar snackbar, int event) {
                             //see Snackbar.Callback docs for event details
                             // go back
-                            if (forExisting) {
-                                // existing piece, go to this piece's details activity
-                                Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
-                                mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
-                                details.putExtra(RECORDING_URIS, mRecUris);
-                                details.putExtra(REMIX_URIS, mRemixUris);
-                                details.putExtra(PIECE_ID, mPieceId);
-                                details.putExtra(PIECE_URI, mPieceUri);
+                            // existing piece, go to this piece's details activity
+                            Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
+                            mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
+                            details.putExtra(RECORDING_URIS, mRecUris);
+                            details.putExtra(REMIX_URIS, mRemixUris);
+                            details.putExtra(PIECE_ID, mPieceId);
+                            details.putExtra(PIECE_URI, mPieceUri);
 
-                                startActivity(details);
-                            } else {
-                                // new piece, go to list
-                                startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
-                            }
+                            startActivity(details);
                         }
 
                         @Override
@@ -178,20 +169,15 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                         public void onDismissed(Snackbar snackbar, int event) {
                             //see Snackbar.Callback docs for event details
                             // go back
-                            if (forExisting) {
-                                // existing piece, go to this piece's details activity
-                                Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
-                                mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
-                                details.putExtra(RECORDING_URIS, mRecUris);
-                                details.putExtra(REMIX_URIS, mRemixUris);
-                                details.putExtra(PIECE_ID, mPieceId);
-                                details.putExtra(PIECE_URI, mPieceUri);
+                            // existing piece, go to this piece's details activity
+                            Intent details = new Intent(getApplicationContext(), DetailsActivity.class);
+                            mRecUris.add(mNewRecordingUri); // add new URI to list before passing it back
+                            details.putExtra(RECORDING_URIS, mRecUris);
+                            details.putExtra(REMIX_URIS, mRemixUris);
+                            details.putExtra(PIECE_ID, mPieceId);
+                            details.putExtra(PIECE_URI, mPieceUri);
 
-                                startActivity(details);
-                            } else {
-                                // new piece, go to list
-                                startActivity(new Intent(getApplicationContext(), PieceListActivity.class));
-                            }
+                            startActivity(details);
                         }
 
                         @Override
@@ -263,9 +249,16 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
             }
         } else {
             // Permission has already been granted
-            recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+            recorder = new MediaRecorder();/*new AudioRecord(MediaRecorder.AudioSource.MIC,
                     RECORDER_SAMPLERATE, RECORDER_CHANNELS,
-                    RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+                    RECORDER_AUDIO_ENCODING, BUFFER_ELEMENTS_2_REC * BytesPerElement);*/
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.OGG);
+            } else {
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.WEBM);
+            }
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.VORBIS);
         }
 
         timer = new Timer();
@@ -326,15 +319,22 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         final Date date = new Date();
         startRecBtn.setOnClickListener(view -> {
             if (recorder != null) {
-                recorder.startRecording();
-                isRecording = true;
                 recordingThread = new Thread(() -> {
                     //Looper.prepare();
                     mPieceName = pieceNameTv.getText().toString();
 
                     mForExisting = forExisting;
                     mExistingPieceUri = existingPieceUri;
+                    isRecording = true;
                     NewRecordingActivity.this.writeAudioDataToFile();
+                    if (isRecording) {
+                        try {
+                            recorder.prepare();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        recorder.start();
+                    }
                 }, "AudioRecorder Thread");
                 recordingThread.start();
                 timer.schedule(new TimerTask() {
@@ -368,9 +368,21 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_RECORD_AUDIO:
-                recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                recorder = new MediaRecorder();/*new AudioRecord(MediaRecorder.AudioSource.MIC,
                         RECORDER_SAMPLERATE, RECORDER_CHANNELS,
-                        RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+                        RECORDER_AUDIO_ENCODING, BUFFER_ELEMENTS_2_REC * BytesPerElement);*/
+                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.OGG);
+                    File externalFilesDir = getExternalFilesDir(null);
+                    if (externalFilesDir != null) {
+                        recorder.setOutputFile(externalFilesDir.getPath() + "/PianoRepertoire/" + mPieceId + "/" + mPieceName + ".ogg");
+                    }
+                } else {
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.WEBM);
+                    recorder.setOutputFile(Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + mPieceId + "/" + mPieceName + ".webm");
+                }
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.VORBIS);
                 break;
             case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
                 writePieceToExternalStorage();
@@ -419,8 +431,13 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
 
         contentValues.put(DatabaseDescription.Recording.COLUMN_PIECE_ID,
                 pieceId);
-        contentValues.put(DatabaseDescription.Recording.COLUMN_FILE_NAME,
-                pieceNameTv.getText().toString() + ".pcm");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            contentValues.put(DatabaseDescription.Recording.COLUMN_FILE_NAME,
+                    pieceNameTv.getText().toString() + ".ogg");
+        } else {
+            contentValues.put(DatabaseDescription.Recording.COLUMN_FILE_NAME,
+                    pieceNameTv.getText().toString() + ".webm");
+        }
         contentValues.put(DatabaseDescription.Recording.COLUMN_RATING, 0);
         contentValues.put(DatabaseDescription.Recording.COLUMN_FAVORITE, false);
         contentValues.put(DatabaseDescription.Remix.COLUMN_REC_OR_REM, "rec"); // it's a recording
@@ -433,7 +450,7 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
 
     private void writeAudioDataToFile() {
         // create a directory for this app, if it doesn't already exist
-        m_RecordingsDir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
+        File m_RecordingsDir = new File(Environment.getExternalStorageDirectory() + "/PianoRepertoire");
 
         if (m_RecordingsDir.isDirectory()) {
             //m_RecordingsDirCreated = true; // the "Piano Repertoire" directory has already been created
@@ -500,8 +517,32 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
         }
 
         // make a new file for this recording in the above directory
-        filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceId + "/" + mPieceName + ".pcm";
-        if (!new File(filePath).exists()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceId + "/" + mPieceName + ".ogg";
+        } else {
+            filePath = Environment.getExternalStorageDirectory().getPath() + "/PianoRepertoire/" + pieceId + "/" + mPieceName + ".webm";
+        }
+
+        File f = new File(filePath);
+        if (!f.exists()) {
+            // create a placeholder file
+            try {
+
+                new FileOutputStream(f).close();
+                boolean lastModifiedSet = f.setLastModified(System.currentTimeMillis());
+
+                if (!lastModifiedSet) {
+                    try {
+                        throw new Exception("last modified date was not set!");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            recorder.setOutputFile(filePath);
+
             // if there is not already a recording with this name, write a new file
             PianoRepertoireDatabaseHelper prdh = new PianoRepertoireDatabaseHelper(getApplicationContext());
             SQLiteDatabase sqldb = SQLiteDatabase.create((sqLiteDatabase, sqLiteCursorDriver, s, sqLiteQuery) -> null);
@@ -509,7 +550,7 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
             prdh.onCreate(sqldb); // Create the PIECES and RECORDINGS tables if they don't already exist
             saveRecordingFileName(pieceId);
 
-            short sData[] = new short[BufferElements2Rec];
+            /*short sData[] = new short[BUFFER_ELEMENTS_2_REC];
 
             os = null;
 
@@ -520,11 +561,11 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
             }
 
             while (isRecording) {
-                recorder.read(sData, 0, BufferElements2Rec);
+                recorder.read(sData, 0, BUFFER_ELEMENTS_2_REC);
                 try {
                     byte bData[] = short2byte(sData);
                     if (os != null) {
-                        os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+                        os.write(bData, 0, BUFFER_ELEMENTS_2_REC * BytesPerElement);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -537,7 +578,7 @@ public class NewRecordingActivity extends AppCompatActivity implements LoaderMan
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
         } else {
             Snackbar.make(constraintLayout,
                     "There is already a recording with this name.", Snackbar.LENGTH_LONG).show();

@@ -1,7 +1,7 @@
 package io.github.jtmaher2.pianorepertoireapp;
 
 import android.content.Context;
-import android.support.v7.widget.AppCompatRatingBar;
+import androidx.appcompat.widget.AppCompatRatingBar;
 import android.util.AttributeSet;
 
 public class CustomRatingBar extends AppCompatRatingBar {
