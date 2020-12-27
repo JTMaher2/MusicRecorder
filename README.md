@@ -17,5 +17,3 @@ Based on the following app: [Working With Audio](https://docs.microsoft.com/xama
 - Remixing audio recordings using OGG Opus API ([Concentus](https://github.com/lostromb/concentus.oggfile), [NAudio](https://github.com/naudio/NAudio))
 
 Recordings are persisted between sessions using a SQLite database. Once an operation has been started, it must be stopped. No other actions are allowed in the meantime. The best way to demonstrate recording and playback is to record some sound and then play it back again. The best way to remix recordings is to record multiple sounds, and then specify the time intervals and orders that you want them to be remixed in.
-
-This app is licensed under the Microsoft Public License.
