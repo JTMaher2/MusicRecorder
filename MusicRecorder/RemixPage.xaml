@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Io.Github.Jtmaher2.MusicRecorder.RemixPage">
+    <ContentPage.Content>
+        <StackLayout Orientation="Vertical">
+            <CollectionView x:Name="MusicRecColView" ItemsSource="{Binding MusicRecordings}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="10" x:Name="pieceGrid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding RecordingName}"></Label>
+                            <Label Text="Start" Grid.Row="1" Grid.Column="2"></Label>
+                            <Entry Grid.Row="1" Placeholder="Hr." Grid.Column="3"></Entry>
+                            <Entry Grid.Row="1" Placeholder="Min." Grid.Column="4"></Entry>
+                            <Entry Grid.Row="1" Placeholder="Sec." Grid.Column="5"></Entry>
+                            <Entry Grid.Row="2" Grid.Column="1" Placeholder="Order"></Entry>
+                            <Label Text="End" Grid.Row="2" Grid.Column="2"></Label>
+                            <Entry Grid.Row="2" Placeholder="Hr." Grid.Column="3"></Entry>
+                            <Entry Grid.Row="2" Placeholder="Min." Grid.Column="4"></Entry>
+                            <Entry Grid.Row="2" Placeholder="Sec." Grid.Column="5"></Entry>
+                            <Button Text="Preview" Grid.Row="3" Grid.Column="1" Clicked="Button_Clicked"></Button>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="Combine" Clicked="Button_Clicked_1"></Button>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

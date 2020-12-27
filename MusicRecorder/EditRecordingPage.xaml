@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Io.Github.Jtmaher2.MusicRecorder.EditRecordingPage">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="100" />
+        </Grid.RowDefinitions>
+
+        <Label Grid.Row="0" Text="Name"></Label>
+        <Entry Grid.Row="1" x:Name="fileNameEnt" Text="File Name"></Entry>
+        <Label Grid.Row="2" Text="Composer"></Label>
+        <Entry Grid.Row="3" x:Name="composerEnt" Text="Composer"></Entry>
+        <Label Grid.Row="4" Text="Notes"></Label>
+        <Entry Grid.Row="5" x:Name="notesEnt" Text="Notes"></Entry>
+        <Button Grid.Row="6" x:Name="startRecBtn" Text="Start Recording" ></Button>
+        <Button Grid.Row="7" x:Name="stopRecBtn" Text="Stop Recording" ></Button>
+        <Button Grid.Row="8" x:Name="previewRecBtn" Text="Preview Recording" Clicked="PreviewRecBtn_Clicked"></Button>
+        <Button Grid.Row="9" x:Name="saveRecBtn" Text="Save Recording" Clicked="Button_Clicked" ></Button>
+    </Grid>
+
+</ContentPage>
