@@ -1,4 +1,5 @@
 ﻿using AsyncAwaitBestPractices;
+using Io.Github.Jtmaher2.Musicrecorder;
 using SQLite;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,10 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 {
                     await Database.CreateTablesAsync(CreateFlags.None, typeof(MusicRecording)).ConfigureAwait(false);
                 }
+                if (!Database.TableMappings.Any(m => m.MappedType.Name == typeof(MusicRemix).Name))
+                {
+                    await Database.CreateTablesAsync(CreateFlags.None, typeof(MusicRemix)).ConfigureAwait(false);
+                }
                 initialized = true;
             }
         }
@@ -40,9 +45,19 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             return Database.Table<MusicRecording>().ToListAsync();
         }
 
+        public Task<List<MusicRemix>> GetRemixItemsAsync()
+        {
+            return Database.Table<MusicRemix>().ToListAsync();
+        }
+
         public Task<MusicRecording> GetItemAsync(int id)
         {
             return Database.Table<MusicRecording>().Where(i => i.ID == id).FirstOrDefaultAsync();
+        }
+
+        public Task<MusicRemix> GetRemixItemAsync(int id)
+        {
+            return Database.Table<MusicRemix>().Where(i => i.ID == id).FirstOrDefaultAsync();
         }
 
         public Task<int> SaveItemAsync(MusicRecording item)
@@ -57,7 +72,24 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             }
         }
 
+        public Task<int> SaveRemixItemAsync(MusicRemix item)
+        {
+            if (item.ID != 0)
+            {
+                return Database.UpdateAsync(item);
+            }
+            else
+            {
+                return Database.InsertAsync(item);
+            }
+        }
+
         public Task<int> DeleteItemAsync(MusicRecording item)
+        {
+            return Database.DeleteAsync(item);
+        }
+
+        public Task<int> DeleteRemixItemAsync(MusicRemix item)
         {
             return Database.DeleteAsync(item);
         }

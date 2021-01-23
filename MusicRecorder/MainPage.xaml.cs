@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Io.Github.Jtmaher2.Musicrecorder;
 using Io.Github.Jtmaher2.MusicRecorder.Services;
 using Io.Github.Jtmaher2.MusicRecorder.ViewModels;
 using System;
@@ -18,11 +19,14 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         List<MusicRecording> mExistingRecs;
 
+        List<MusicRemix> mExistingRems;
+
         public ICommand NavigateCommand { get; private set; }
 
         private int mID;
 
         private string mName;
+        private string mRemixName;
 
         private readonly List<int> mMarkedForRemixIndexes;
 
@@ -35,9 +39,10 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             mMarkedForRemixIndexes = new List<int>();
         }
 
-        private async void PopulateRecList()
+        private async void PopulateRecAndRemList()
         {
             mExistingRecs = await App.Database.GetItemsAsync();
+            mExistingRems = await App.Database.GetRemixItemsAsync();
 
             NavigateCommand = new Command<Type>(
             async (Type pageType) =>
@@ -46,13 +51,18 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 await Navigation.PushAsync(page);
             });
 
-            BindingContext = new MusicRecordingsViewModel(mExistingRecs, Navigation);
+            BindingContext = new MusicRecordingsRemixesViewModel(mExistingRecs, mExistingRems, Navigation);
 
             if (mExistingRecs.Count > 0)
             {
                 mID = mExistingRecs[0].ID;
 
                 mName = mExistingRecs[0].RecordingName;
+            }
+
+            if (mExistingRems.Count > 0)
+            {
+                mRemixName = mExistingRems[0].RemixName;
             }
         }
 
@@ -104,12 +114,12 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             await App.Database.SaveItemAsync(mr);
 
-            PopulateRecList();
+            PopulateRecAndRemList();
         }
 
         protected override void OnAppearing()
         {
-            PopulateRecList();
+            PopulateRecAndRemList();
         }
 
         private void Button_Clicked(object sender, EventArgs e)
@@ -126,16 +136,48 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             }
         }
 
+        private void Button_RemixClicked(object sender, EventArgs e)
+        {
+            if (((Button)sender).Text == "Preview")
+            {
+                mAudioRecorderService.PreviewRecording(mRemixName, 0, 0);
+                ((Button)sender).Text = "Stop";
+            }
+            else
+            {
+                mAudioRecorderService.StopPreviewRecording();
+                ((Button)sender).Text = "Preview";
+            }
+        }
+
         private void CarouselView_CurrentItemChanged(object sender, CurrentItemChangedEventArgs e)
         {
-            mID = ((MusicRecording)e.CurrentItem).ID;
-            mName = ((MusicRecording)e.CurrentItem).RecordingName;
+            if (e.CurrentItem != null)
+            {
+                mID = ((MusicRecording)e.CurrentItem).ID;
+                mName = ((MusicRecording)e.CurrentItem).RecordingName;
+            }
+        }
+
+        private void CarouselView_RemixCurrentItemChanged(object sender, CurrentItemChangedEventArgs e)
+        {
+            if (e.CurrentItem != null)
+            {
+                mRemixName = ((MusicRemix)e.CurrentItem).RemixName;
+            }
         }
 
         private void Button_Clicked_1(object sender, EventArgs e)
         {
-            ((Button)sender).Text = "Marked for Remix";
-            mMarkedForRemixIndexes.Add(mID);
+            if (((Button)sender).Text == "Mark for Remix")
+            {
+                ((Button)sender).Text = "Marked for Remix";
+                mMarkedForRemixIndexes.Add(mID);
+            } else
+            {
+                ((Button)sender).Text = "Mark for Remix";
+                mMarkedForRemixIndexes.Remove(mID);
+            }
         }
 
         private void Button_Clicked_2(object sender, EventArgs e)

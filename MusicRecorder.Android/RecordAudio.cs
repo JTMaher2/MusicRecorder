@@ -6,8 +6,6 @@ using Io.Github.Jtmaher2.MusicRecorder.Services;
 using Xamarin.Essentials;
 using System.Threading.Tasks;
 using Android.Widget;
-using Android.Content;
-using Io.Github.Jtmaher2.MusicRecorder.Droid;
 using Android.App;
 
 namespace Io.Github.Jtmaher2.MusicRecorder.Droid
@@ -126,7 +124,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				} else
                 {
 					// existing recording
-					file = new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + fileName + ".ogg");
+					file = new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".ogg") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".ogg");
 				}
 				Java.IO.FileInputStream fis = new Java.IO.FileInputStream(file);
 				await player.SetDataSourceAsync(fis.FD);

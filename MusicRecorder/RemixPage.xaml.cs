@@ -1,6 +1,7 @@
 ﻿using Concentus.Enums;
 using Concentus.Oggfile;
 using Concentus.Structs;
+using Io.Github.Jtmaher2.Musicrecorder;
 using Io.Github.Jtmaher2.MusicRecorder.Services;
 using Io.Github.Jtmaher2.MusicRecorder.ViewModels;
 using NAudio.Wave;
@@ -10,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using static Xamarin.Forms.Grid;
@@ -45,7 +47,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 }
             }
 
-            BindingContext = new MusicRecordingsViewModel(chosenRecs, Navigation);
+            BindingContext = new MusicRecordingsRemixesViewModel(chosenRecs, null, Navigation);
         }
 
         private void Button_Clicked(object sender, EventArgs e)
@@ -106,7 +108,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 endingDT - nowMillis);
         }
 
-        private void Button_Clicked_1(object sender, EventArgs e)
+        private async void Button_Clicked_1(object sender, EventArgs e)
         {
             IEnumerable src = MusicRecColView.ItemsSource;
 
@@ -118,7 +120,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             CollectionView cv = (CollectionView)childrenEnum.Current;
             System.Collections.ObjectModel.ReadOnlyCollection<Element> obj = (System.Collections.ObjectModel.ReadOnlyCollection<Element>)cv.GetType().GetProperty("LogicalChildrenInternal", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(cv);
             SortedList<int, object[]> orders = new SortedList<int, object[]>();
-
+            StringBuilder combinedRemNames = new StringBuilder();
             for (int i = 0; i < obj.Count; i++)
             {
                 int startHr = int.Parse(((Entry)((Grid)obj[i]).Children[2]).Text),
@@ -139,7 +141,16 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 string fileName = "/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + ((MusicRecording)ienum.Current).RecordingName + ".ogg";
 
                 orders.Add(order, new object[3] { fileName, new int[3] { startHr, startMin, startSec }, new int[3] { endHr, endMin, endSec } });
+
+                combinedRemNames.Append(((MusicRecording)ienum.Current).RecordingName);
             }
+            string combinedRemNamesStr = combinedRemNames.ToString() + $"-{DateTime.Now.ToFileTime()}";
+
+            await App.Database.SaveRemixItemAsync(new MusicRemix
+            {
+                ID = 0,
+                RemixName = $"{combinedRemNamesStr}.ogg"
+            });
 
             List<ISampleProvider> sampleProviders = new List<ISampleProvider>();
             List<MemoryStream> pcmStreams = new List<MemoryStream>();
@@ -167,7 +178,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 double numSecToPlay = (endTimeSpan - startTimeSpan).TotalSeconds,
                     recSecLen = bufSize / BYTES_PER_SEC; // recording total # of seconds
 
-                long bytesToPlay = (long)Math.Round((numSecToPlay / recSecLen) * bufSize); // the number of bytes to read for the specified length; 
+                long bytesToPlay = (long)Math.Round(numSecToPlay / recSecLen * bufSize); // the number of bytes to read for the specified length; 
                 
                 int numBytesWritten = 0;
 
@@ -195,9 +206,9 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             var playlist = new ConcatenatingSampleProvider(sampleProviders);
             
-            WaveFileWriter.CreateWaveFile16("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/combined.wav", playlist);
+            WaveFileWriter.CreateWaveFile16("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".wav", playlist);
 
-            using (FileStream fileOut = new FileStream("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/combined.ogg", FileMode.Create))
+            using (FileStream fileOut = new FileStream("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".ogg", FileMode.Create))
             {
                 OpusEncoder encoder = OpusEncoder.Create(48000, 2, OpusApplication.OPUS_APPLICATION_AUDIO);
                 encoder.Bitrate = 96000;
@@ -207,14 +218,14 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 tags.Fields[OpusTagName.Artist] = "concentus";
                 OpusOggWriteStream oggOut = new OpusOggWriteStream(encoder, fileOut, tags);
 
-                byte[] allInput = File.ReadAllBytes("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/combined.wav");
+                byte[] allInput = File.ReadAllBytes("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".wav");
                 short[] samples = BytesToShorts(allInput);
 
                 oggOut.WriteSamples(samples, 0, samples.Length);
                 oggOut.Finish();
             }
 
-            File.Delete("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/combined.wav");
+            File.Delete("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".wav");
 
             // free up system resources
             for (int i = 0; i < pcmStreams.Count; i++)
@@ -233,8 +244,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             short[] processedValues = new short[length / 2];
             for (int c = 0; c < processedValues.Length; c++)
             {
-                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
-                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
+                processedValues[c] = (short)(input[(c * 2) + offset] << 0);
+                processedValues[c] += (short)(input[(c * 2) + 1 + offset] << 8);
             }
 
             return processedValues;
