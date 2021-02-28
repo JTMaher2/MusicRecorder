@@ -40,58 +40,58 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             }
         }
 
-        public Task<List<MusicRecording>> GetItemsAsync()
+        public async Task<List<MusicRecording>> GetItemsAsync()
         {
-            return Database.Table<MusicRecording>().ToListAsync();
+            return await Database.Table<MusicRecording>().ToListAsync();
         }
 
-        public Task<List<MusicRemix>> GetRemixItemsAsync()
+        public async Task<List<MusicRemix>> GetRemixItemsAsync()
         {
-            return Database.Table<MusicRemix>().ToListAsync();
+            return await Database.Table<MusicRemix>().ToListAsync();
         }
 
-        public Task<MusicRecording> GetItemAsync(int id)
+        public async Task<MusicRecording> GetItemAsync(int id)
         {
-            return Database.Table<MusicRecording>().Where(i => i.ID == id).FirstOrDefaultAsync();
+            return await Database.Table<MusicRecording>().Where(i => i.ID == id).FirstOrDefaultAsync();
         }
 
-        public Task<MusicRemix> GetRemixItemAsync(int id)
+        public async Task<MusicRemix> GetRemixItemAsync(int id)
         {
-            return Database.Table<MusicRemix>().Where(i => i.ID == id).FirstOrDefaultAsync();
+            return await Database.Table<MusicRemix>().Where(i => i.ID == id).FirstOrDefaultAsync();
         }
 
-        public Task<int> SaveItemAsync(MusicRecording item)
+        public async Task<int> SaveItemAsync(MusicRecording item)
         {
             if (item.ID != 0)
             {
-                return Database.UpdateAsync(item);
+                return await Database.UpdateAsync(item);
             }
             else
             {
-                return Database.InsertAsync(item);
+                return await Database.InsertAsync(item);
             }
         }
 
-        public Task<int> SaveRemixItemAsync(MusicRemix item)
+        public async Task<int> SaveRemixItemAsync(MusicRemix item)
         {
             if (item.ID != 0)
             {
-                return Database.UpdateAsync(item);
+                return await Database.UpdateAsync(item);
             }
             else
             {
-                return Database.InsertAsync(item);
+                return await Database.InsertAsync(item);
             }
         }
 
-        public Task<int> DeleteItemAsync(MusicRecording item)
+        public async Task<int> DeleteItemAsync(MusicRecording item)
         {
-            return Database.DeleteAsync(item);
+            return await Database.DeleteAsync(item);
         }
 
-        public Task<int> DeleteRemixItemAsync(MusicRemix item)
+        public async Task<int> DeleteRemixItemAsync(MusicRemix item)
         {
-            return Database.DeleteAsync(item);
+            return await Database.DeleteAsync(item);
         }
     }
 }

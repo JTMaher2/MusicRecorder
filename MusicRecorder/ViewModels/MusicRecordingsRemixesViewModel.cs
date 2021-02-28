@@ -52,9 +52,11 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 
         public ICommand EditCommand => new Command<MusicRecording>(EditMusicRecording);
 
-        private INavigation mNavigation;
+        private readonly INavigation mNavigation;
 
-        public MusicRecordingsRemixesViewModel(List<MusicRecording> existingRecs, List<MusicRemix> existingRems, INavigation navigation)
+        private readonly Page mPage;
+
+        public MusicRecordingsRemixesViewModel(List<MusicRecording> existingRecs, List<MusicRemix> existingRems, INavigation navigation, Page page)
         {
             musicRecSource = new List<MusicRecording>();
             musicRemSource = new List<MusicRemix>();
@@ -65,6 +67,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 
             CurrentItem = MusicRecordings.Skip(0).FirstOrDefault();
             CurrentRemixItem = MusicRemixes.Skip(0).FirstOrDefault();
+
+            mPage = page;
 
             OnPropertyChanged("CurrentItem");
             Position = 0;
@@ -172,29 +176,31 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
             OnPropertyChanged("CurrentRemixPosition");
         }
 
-        void RemoveMusicRecording(MusicRecording recording)
+        async void RemoveMusicRecording(MusicRecording recording)
         {
             if (MusicRecordings.Contains(recording))
             {
+                await mPage.DisplayAlert("Delete", $"Are you sure you want to delete {recording.RecordingName}?", "Yes", "No");
                 MusicRecordings.Remove(recording);
-                App.Database.DeleteItemAsync(recording);
+                await App.Database.DeleteItemAsync(recording);
                 OnPropertyChanged("source");
             }
         }
 
-        void RemoveMusicRemix(MusicRemix remix)
+        async void RemoveMusicRemix(MusicRemix remix)
         {
             if (MusicRemixes.Contains(remix))
             {
+                await mPage.DisplayAlert("Delete", $"Are you sure you want to delete {remix.RemixName}?", "Yes", "No");
                 MusicRemixes.Remove(remix);
-                App.Database.DeleteRemixItemAsync(remix);
+                await App.Database.DeleteRemixItemAsync(remix);
                 OnPropertyChanged("source");
             }
         }
 
-        void EditMusicRecording(MusicRecording recordingNav)
+        async void EditMusicRecording(MusicRecording recordingNav)
         {
-            mNavigation.PushModalAsync(new EditRecordingPage(recordingNav.ID));
+            await mNavigation.PushModalAsync(new EditRecordingPage(recordingNav.ID));
         }
 
         #region INotifyPropertyChanged

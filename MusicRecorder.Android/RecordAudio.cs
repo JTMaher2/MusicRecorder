@@ -37,7 +37,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 		MediaPlayer player = null;
 		static string filePath = "/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/";
 		MediaRecorder recorder = null;
-
+		bool mCompleted = false; // has the playback completed?
 		public async Task<PermissionStatus> CheckAndRequestMicPermission()
 		{
 			var status = await Permissions.CheckStatusAsync<Permissions.Microphone>();
@@ -104,6 +104,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 
 		public async void PreviewRecording(string fileName, long seekToMS, long stopAtMS)
         {
+			mCompleted = false; // the playback is in progress
 			try
 			{
 				if (player == null)
@@ -140,6 +141,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				}
 
 				player.Start();
+
+                player.MediaTimeDiscontinuity += Player_MediaTimeDiscontinuity;
 			}
 			catch (Exception ex)
 			{
@@ -147,12 +150,25 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			}
 		}
 
-		public void StopPreviewRecording()
+        private void Player_MediaTimeDiscontinuity(object sender, MediaPlayer.MediaTimeDiscontinuityEventArgs e)
+        {
+            if (!e.Mp.IsPlaying && !mCompleted)
+            {
+				mCompleted = true; // the playback has completed
+			}
+        }
+
+        public void StopPreviewRecording()
         {
 			if (player != null)
             {
 				player.Stop();
 			}
         }
-	}
+
+        public bool IsCompleted()
+        {
+			return mCompleted;
+        }
+    }
 }

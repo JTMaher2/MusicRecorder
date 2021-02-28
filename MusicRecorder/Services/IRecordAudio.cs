@@ -1,6 +1,4 @@
-﻿using Android.Content;
-
-namespace Io.Github.Jtmaher2.MusicRecorder.Services
+﻿namespace Io.Github.Jtmaher2.MusicRecorder.Services
 {
     public interface IRecordAudio
     {
@@ -8,5 +6,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Services
         void Stop();
         void PreviewRecording(string fileName, long seekToMS, long stopAtMS);
         void StopPreviewRecording();
+        bool IsCompleted();
     }
 }

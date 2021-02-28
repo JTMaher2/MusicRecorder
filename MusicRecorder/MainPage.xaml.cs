@@ -4,6 +4,7 @@ using Io.Github.Jtmaher2.MusicRecorder.Services;
 using Io.Github.Jtmaher2.MusicRecorder.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
@@ -28,6 +29,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private string mName;
         private string mRemixName;
 
+        Button mSenderBtn; // the button that gets clicked when previewing a recording or remix
+
         private readonly List<int> mMarkedForRemixIndexes;
 
         public MainPage()
@@ -51,7 +54,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 await Navigation.PushAsync(page);
             });
 
-            BindingContext = new MusicRecordingsRemixesViewModel(mExistingRecs, mExistingRems, Navigation);
+            BindingContext = new MusicRecordingsRemixesViewModel(mExistingRecs, mExistingRems, Navigation, this);
 
             if (mExistingRecs.Count > 0)
             {
@@ -124,30 +127,66 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private void Button_Clicked(object sender, EventArgs e)
         {
-            if (((Button)sender).Text == "Preview")
+            mSenderBtn = (Button)sender;
+
+            if (mSenderBtn.Text == "Preview")
             {
                 mAudioRecorderService.PreviewRecording(mName, 0, 0);
-                ((Button)sender).Text = "Stop";
+                mSenderBtn.Text = "Stop";
             }
             else
             {
                 mAudioRecorderService.StopPreviewRecording();
-                ((Button)sender).Text = "Preview";
+                mSenderBtn.Text = "Preview";
             }
+
+            // monitor when playback completes, so that button text can be changed
+            void a()
+            {
+                while (!mAudioRecorderService.IsCompleted())
+                {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    mSenderBtn.Text = "Preview";
+                });
+            }
+
+            new Task(a).Start();
         }
 
         private void Button_RemixClicked(object sender, EventArgs e)
         {
-            if (((Button)sender).Text == "Preview")
+            mSenderBtn = (Button)sender;
+
+            if (mSenderBtn.Text == "Preview")
             {
                 mAudioRecorderService.PreviewRecording(mRemixName, 0, 0);
-                ((Button)sender).Text = "Stop";
+                mSenderBtn.Text = "Stop";
             }
             else
             {
                 mAudioRecorderService.StopPreviewRecording();
-                ((Button)sender).Text = "Preview";
+                mSenderBtn.Text = "Preview";
             }
+
+            // monitor when playback completes, so that button text can be changed
+            void a()
+            {
+                while (!mAudioRecorderService.IsCompleted())
+                {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    mSenderBtn.Text = "Preview";
+                });
+            }
+
+            new Task(a).Start();
         }
 
         private void CarouselView_CurrentItemChanged(object sender, CurrentItemChangedEventArgs e)
@@ -180,9 +219,9 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             }
         }
 
-        private void Button_Clicked_2(object sender, EventArgs e)
+        private async void Button_Clicked_2(object sender, EventArgs e)
         {
-            Navigation.PushModalAsync(new RemixPage(mMarkedForRemixIndexes));
+            await Navigation.PushModalAsync(new RemixPage(mMarkedForRemixIndexes));
         }
     }
 }

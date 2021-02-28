@@ -50,7 +50,16 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private void PreviewRecBtn_Clicked(object sender, EventArgs e)
         {
-            mAudioRecorderService.PreviewRecording(fileNameEnt.Text, 0, 0);
+            if (previewRecBtn.Text == "Preview Recording")
+            {
+                mAudioRecorderService.PreviewRecording(fileNameEnt.Text, 0, 0);
+                previewRecBtn.Text = "Stop";
+            }
+            else
+            {
+                mAudioRecorderService.StopPreviewRecording();
+                previewRecBtn.Text = "Preview Recording";
+            }
         }
 
         protected override bool OnBackButtonPressed()

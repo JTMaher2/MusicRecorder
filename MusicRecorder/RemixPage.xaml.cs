@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using static Xamarin.Forms.Grid;
@@ -23,6 +24,10 @@ namespace Io.Github.Jtmaher2.MusicRecorder
     {
         private static readonly double BYTES_PER_SEC = 48000 * 2 * 2;
         readonly IRecordAudio mAudioRecorderService;
+        private Button mSenderBtn;
+        private long _startingDT,
+            _endingDT,
+            _nowMillis;
 
         public RemixPage(List<int> markedForRemixRecs)
         {
@@ -47,7 +52,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 }
             }
 
-            BindingContext = new MusicRecordingsRemixesViewModel(chosenRecs, null, Navigation);
+            BindingContext = new MusicRecordingsRemixesViewModel(chosenRecs, null, Navigation, this);
         }
 
         private void Button_Clicked(object sender, EventArgs e)
@@ -99,13 +104,47 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             DateTimeOffset dtoNow = DateTimeOffset.Now;
 
-            long startingDT = dtoNow.AddHours(startingHr).AddMinutes(startingMin).AddSeconds(startingSec).ToUnixTimeMilliseconds(),
-                endingDT = dtoNow.AddHours(endingHr).AddMinutes(endingMin).AddSeconds(endingSec).ToUnixTimeMilliseconds(),
-                nowMillis = dtoNow.ToUnixTimeMilliseconds();
+            _startingDT = dtoNow.AddHours(startingHr).AddMinutes(startingMin).AddSeconds(startingSec).ToUnixTimeMilliseconds();
+            _endingDT = dtoNow.AddHours(endingHr).AddMinutes(endingMin).AddSeconds(endingSec).ToUnixTimeMilliseconds();
+            _nowMillis = dtoNow.ToUnixTimeMilliseconds();
 
-            mAudioRecorderService.PreviewRecording(name, 
-                startingDT - nowMillis,
-                endingDT - nowMillis);
+            mSenderBtn = (Button)sender;
+
+            if (mSenderBtn.Text == "Preview")
+            {
+                mAudioRecorderService.PreviewRecording(name,
+                    _startingDT - _nowMillis,
+                    _endingDT - _nowMillis);
+                mSenderBtn.Text = "Stop";
+            }
+            else
+            {
+                mAudioRecorderService.StopPreviewRecording();
+                System.Threading.Thread.Sleep((int)new TimeSpan(_endingDT - _nowMillis).Subtract(new TimeSpan(_startingDT - _nowMillis)).Ticks); // this is necessary in order to prevent subsequent playbacks from being too short
+                mSenderBtn.Text = "Preview";
+            }
+
+            // monitor when playback completes, so that button text can be changed
+            void a()
+            {
+                while (!mAudioRecorderService.IsCompleted())
+                {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    mSenderBtn.Text = "Preview";
+                });
+            }
+
+            new Task(a).Start();
+        }
+
+        private void RemixPage_Clicked(object sender, EventArgs e)
+        {
+            mAudioRecorderService.StopPreviewRecording();
+            mSenderBtn.Text = "Preview";
         }
 
         private async void Button_Clicked_1(object sender, EventArgs e)
