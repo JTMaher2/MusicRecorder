@@ -271,20 +271,17 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 pcmStreams[i].Close();
             }
+
+            await Navigation.PopModalAsync();
         }
 
         public static short[] BytesToShorts(byte[] input)
         {
-            return BytesToShorts(input, 0, input.Length);
-        }
-
-        public static short[] BytesToShorts(byte[] input, int offset, int length)
-        {
-            short[] processedValues = new short[length / 2];
+            short[] processedValues = new short[input.Length / 2];
             for (int c = 0; c < processedValues.Length; c++)
             {
-                processedValues[c] = (short)(input[(c * 2) + offset] << 0);
-                processedValues[c] += (short)(input[(c * 2) + 1 + offset] << 8);
+                processedValues[c] = (short)(input[(c * 2)] << 0);
+                processedValues[c] += (short)(input[(c * 2) + 1] << 8);
             }
 
             return processedValues;
