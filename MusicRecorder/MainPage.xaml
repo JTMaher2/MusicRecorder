@@ -21,11 +21,11 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Grid.RowSpan="1" Text="Title" FontSize="Large"></Label>
-        <Entry Grid.Row="1" Grid.RowSpan="1" x:Name="fileNameEnt" FontSize="Small"></Entry>
+        <Entry Grid.Row="1" Grid.RowSpan="1" x:Name="fileNameEnt" FontSize="Micro"></Entry>
         <Label Grid.Row="2" Grid.RowSpan="1" Text="Composer" FontSize="Large"></Label>
-        <Entry Grid.Row="3" Grid.RowSpan="1" x:Name="composerEnt" FontSize="Small"></Entry>
+        <Entry Grid.Row="3" Grid.RowSpan="1" x:Name="composerEnt" FontSize="Micro"></Entry>
         <Label Grid.Row="4" Grid.RowSpan="1" Text="Notes" FontSize="Large"></Label>
-        <Entry Grid.Row="5" Grid.RowSpan="1" x:Name="notesEnt" FontSize="Small"></Entry>
+        <Entry Grid.Row="5" Grid.RowSpan="1" x:Name="notesEnt" FontSize="Micro"></Entry>
         <Button Grid.Row="6" Grid.RowSpan="1" x:Name="startRecBtn" Text="Start Recording" Clicked="StartRecBtn_Clicked"></Button>
         <Button Grid.Row="7" Grid.RowSpan="1" x:Name="stopRecBtn" Text="Stop Recording" Clicked="StopRecBtn_Clicked"></Button>
         <Button Grid.Row="8" Grid.RowSpan="1" x:Name="previewRecBtn" Text="Preview Recording" Clicked="PreviewRecBtn_Clicked" IsEnabled="False"></Button>
@@ -84,7 +84,7 @@
             </CarouselView.ItemTemplate>
         </CarouselView>
         <Button Text="Remix Selected Recordings" Grid.Row="11" Grid.RowSpan="1" Clicked="Button_Clicked_2"></Button>
-        <CarouselView Grid.Row="12" Grid.RowSpan="2" x:Name="remixCarouselView"
+        <CarouselView Grid.Row="12" Grid.RowSpan="2" x:Name="remixCarouselView" 
                   ItemsSource="{Binding MusicRemixes}" CurrentItemChanged="CarouselView_RemixCurrentItemChanged">
             <CarouselView.ItemTemplate>
                 <DataTemplate>

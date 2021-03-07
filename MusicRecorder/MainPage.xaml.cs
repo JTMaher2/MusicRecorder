@@ -100,7 +100,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private void PreviewRecBtn_Clicked(object sender, EventArgs e)
         {
-            mAudioRecorderService.PreviewRecording(null, 0, 0);
+            mAudioRecorderService.PreviewRecording(fileNameEnt.Text, 0, 0);
         }
 
         private async void SaveRecBtn_Clicked(object sender, EventArgs e)

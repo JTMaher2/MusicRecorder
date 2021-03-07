@@ -3,6 +3,7 @@ using Android.Content.PM;
 using Android.Runtime;
 using Android.OS;
 using Io.Github.Jtmaher2.MusicRecorder.Services;
+using AndroidX.AppCompat.App;
 
 namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 {
@@ -11,6 +12,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            AppCompatDelegate.DefaultNightMode = AppCompatDelegate.ModeNightNo; // disable dark mode
+
             TabLayoutResource = Resource.Layout.Tabbar;
             ToolbarResource = Resource.Layout.Toolbar;
 

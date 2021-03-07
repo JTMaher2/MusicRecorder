@@ -38,6 +38,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 		static string filePath = "/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/";
 		MediaRecorder recorder = null;
 		bool mCompleted = false; // has the playback completed?
+
 		public async Task<PermissionStatus> CheckAndRequestMicPermission()
 		{
 			var status = await Permissions.CheckStatusAsync<Permissions.Microphone>();
@@ -56,40 +57,73 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			return status;
 		}
 
+		public async Task<PermissionStatus> CheckAndRequestWriteExternalStoragePermission()
+		{
+			var status = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
+
+			if (status == PermissionStatus.Granted)
+				return status;
+
+			if (Permissions.ShouldShowRationale<Permissions.StorageWrite>())
+			{
+				// Prompt the user with additional information as to why the permission is needed
+				Toast.MakeText(Application.Context, "Please enable the write external storage permission in order to record audio.", ToastLength.Long);
+			}
+
+			status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+
+			return status;
+		}
+
+		public async Task<PermissionStatus> CheckAndRequestReadExternalStoragePermission()
+		{
+			var status = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+
+			if (status == PermissionStatus.Granted)
+				return status;
+
+			if (Permissions.ShouldShowRationale<Permissions.StorageRead>())
+			{
+				// Prompt the user with additional information as to why the permission is needed
+				Toast.MakeText(Application.Context, "Please enable the read external storage permission in order to record audio.", ToastLength.Long);
+			}
+
+			status = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+			return status;
+		}
+
 		public async void Start (string fileName)
 		{
 			await CheckAndRequestMicPermission();
+			await CheckAndRequestWriteExternalStoragePermission();
+			await CheckAndRequestReadExternalStoragePermission();
 
 			if (filePath.LastIndexOf('.') > filePath.LastIndexOf('/'))
             {
 				filePath = filePath.Substring(0, filePath.LastIndexOf('/'));
             }
-			try {
-				if (!Directory.Exists(filePath))
-                {
-					Directory.CreateDirectory(filePath);
-                }
-				filePath += fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".ogg";
+			if (!Directory.Exists(filePath))
+            {
+				Directory.CreateDirectory(filePath);
+            }
+			filePath += fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".ogg";
 
-				File.Create(filePath);
-				if (File.Exists (filePath))
-					File.Delete (filePath);
+			File.Create(filePath);
+			if (File.Exists (filePath))
+				File.Delete (filePath);
 
-				if (recorder == null)
-					recorder = new MediaRecorder(); // Initial state.
-				else
-					recorder.Reset();
+			if (recorder == null)
+				recorder = new MediaRecorder(); // Initial state.
+			else
+				recorder.Reset();
 
-				recorder.SetAudioSource(AudioSource.Mic);
-				recorder.SetOutputFormat(OutputFormat.Ogg);
-				recorder.SetAudioEncoder(AudioEncoder.Opus); // Initialized state.
-				recorder.SetOutputFile(filePath); // DataSourceConfigured state.
-				recorder.Prepare(); // Prepared state
-				recorder.Start(); // Recording state.
-
-			} catch (Exception ex) {
-				Console.Out.WriteLine (ex.StackTrace);
-			}
+			recorder.SetAudioSource(AudioSource.Mic);
+			recorder.SetOutputFormat(OutputFormat.Ogg);
+			recorder.SetAudioEncoder(AudioEncoder.Opus); // Initialized state.
+			recorder.SetOutputFile(filePath); // DataSourceConfigured state.
+			recorder.Prepare(); // Prepared state
+			recorder.Start(); // Recording state.
 		}
 
 		public void Stop ()
@@ -117,18 +151,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				}
 
 				// This method works better than setting the file path in SetDataSource. Don't know why.
-				Java.IO.File file;
-				if (string.IsNullOrWhiteSpace(fileName))
-				{
-					// new recording
-					file = new Java.IO.File(filePath);
-				} else
-                {
-					// existing recording
-					file = new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".ogg") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".ogg");
-				}
-				Java.IO.FileInputStream fis = new Java.IO.FileInputStream(file);
-				await player.SetDataSourceAsync(fis.FD);
+				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".ogg") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".ogg")).FD);
 
 				player.Prepare();
 				player.SeekTo(seekToMS, MediaPlayerSeekMode.Closest);
