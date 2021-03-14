@@ -107,7 +107,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
             {
 				Directory.CreateDirectory(filePath);
             }
-			filePath += fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".ogg";
+			filePath += fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".opus";
 
 			File.Create(filePath);
 			if (File.Exists (filePath))
@@ -151,7 +151,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				}
 
 				// This method works better than setting the file path in SetDataSource. Don't know why.
-				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".ogg") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".ogg")).FD);
+				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".opus") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".opus")).FD);
 
 				player.Prepare();
 				player.SeekTo(seekToMS, MediaPlayerSeekMode.Closest);

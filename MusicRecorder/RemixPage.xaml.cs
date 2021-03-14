@@ -177,7 +177,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                     ienum.MoveNext();
                 }
 
-                string fileName = "/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + ((MusicRecording)ienum.Current).RecordingName + ".ogg";
+                string fileName = "/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + ((MusicRecording)ienum.Current).RecordingName + ".opus";
 
                 orders.Add(order, new object[3] { fileName, new int[3] { startHr, startMin, startSec }, new int[3] { endHr, endMin, endSec } });
 
@@ -188,7 +188,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             await App.Database.SaveRemixItemAsync(new MusicRemix
             {
                 ID = 0,
-                RemixName = $"{combinedRemNamesStr}.ogg"
+                RemixName = $"{combinedRemNamesStr}.opus"
             });
 
             List<ISampleProvider> sampleProviders = new List<ISampleProvider>();
@@ -247,7 +247,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             
             WaveFileWriter.CreateWaveFile16("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".wav", playlist);
 
-            using (FileStream fileOut = new FileStream("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".ogg", FileMode.Create))
+            using (FileStream fileOut = new FileStream("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + combinedRemNamesStr + ".opus", FileMode.Create))
             {
                 OpusEncoder encoder = OpusEncoder.Create(48000, 2, OpusApplication.OPUS_APPLICATION_AUDIO);
                 encoder.Bitrate = 96000;

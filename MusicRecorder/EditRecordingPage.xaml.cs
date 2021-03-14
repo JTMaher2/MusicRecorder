@@ -41,9 +41,9 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 ID = mId
             });
 
-            File.WriteAllBytes("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + fileNameEnt.Text + ".ogg", File.ReadAllBytes("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + mOrigFileName + ".ogg"));
+            File.WriteAllBytes("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + fileNameEnt.Text + ".opus", File.ReadAllBytes("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + mOrigFileName + ".opus"));
 
-            File.Delete("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + mOrigFileName + ".ogg");
+            File.Delete("/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/" + mOrigFileName + ".opus");
 
             await Navigation.PopModalAsync();
         }
