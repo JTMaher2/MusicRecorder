@@ -7,6 +7,7 @@ using Xamarin.Essentials;
 using System.Threading.Tasks;
 using Android.Widget;
 using Android.App;
+using System.Collections.Generic;
 
 namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 {
@@ -35,7 +36,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 	public class RecordAudio : IRecordAudio
 	{
 		MediaPlayer player = null;
-		static string filePath = "/storage/emulated/0/Android/media/io.github.jtmaher2.musicrecorder/";
+		static string filePath = FileSystem.AppDataDirectory;
 		MediaRecorder recorder = null;
 		bool mCompleted = false; // has the playback completed?
 
@@ -93,7 +94,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			return status;
 		}
 
-		public async void Start (string fileName)
+		public async void Start(string fileName)
 		{
 			await CheckAndRequestMicPermission();
 			await CheckAndRequestWriteExternalStoragePermission();
@@ -101,13 +102,13 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 
 			if (filePath.LastIndexOf('.') > filePath.LastIndexOf('/'))
             {
-				filePath = filePath.Substring(0, filePath.LastIndexOf('/'));
+				filePath = filePath.Substring(0, filePath.LastIndexOf('/') + 1);
             }
 			if (!Directory.Exists(filePath))
             {
 				Directory.CreateDirectory(filePath);
             }
-			filePath += fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".opus";
+			filePath += "/" + fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".opus";
 
 			File.Create(filePath);
 			if (File.Exists (filePath))
@@ -126,7 +127,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			recorder.Start(); // Recording state.
 		}
 
-		public void Stop ()
+		public void Stop()
 		{
 			if (recorder != null)
 			{
@@ -137,7 +138,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 		}
 
 		public async void PreviewRecording(string fileName, long seekToMS, long stopAtMS)
-        {
+		{
 			mCompleted = false; // the playback is in progress
 			try
 			{
@@ -182,7 +183,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
         }
 
         public void StopPreviewRecording()
-        {
+		{
 			if (player != null)
             {
 				player.Stop();
@@ -190,8 +191,23 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
         }
 
         public bool IsCompleted()
-        {
+		{
 			return mCompleted;
+        }
+
+        public void EncodeFlac(string source, string dest)
+		{
+            throw new NotImplementedException();
+        }
+
+        public void WriteFlacRemix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest)
+		{
+            throw new NotImplementedException();
+        }
+
+        public void WriteFile(string fileName, string origFileName)
+		{
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Io.Github.Jtmaher2.Musicrecorder;
+﻿using Io.Github.Jtmaher2.MusicRecorder;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -51,6 +51,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
         public ICommand DeleteRemixCommand => new Command<MusicRemix>(RemoveMusicRemix);
 
         public ICommand EditCommand => new Command<MusicRecording>(EditMusicRecording);
+        public ICommand EditRemixCommand => new Command<MusicRemix>(EditMusicRemix);
 
         private readonly INavigation mNavigation;
 
@@ -77,15 +78,27 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 
         void CreateMusicRecordingCollection(List<MusicRecording> existingRecs)
         {
-            for (int i = 0; i < existingRecs.Count; i++)
+            if (existingRecs.Count == 0)
             {
                 musicRecSource.Add(new MusicRecording
                 {
-                    ID = existingRecs[i].ID,
-                    RecordingName = existingRecs[i].RecordingName,
-                    Composer = existingRecs[i].Composer,
-                    Notes = existingRecs[i].Notes
+                    ID = -1,
+                    RecordingName = "",
+                    Composer = "",
+                    Notes = ""
                 });
+            } else
+            {
+                for (int i = 0; i < existingRecs.Count; i++)
+                {
+                    musicRecSource.Add(new MusicRecording
+                    {
+                        ID = existingRecs[i].ID,
+                        RecordingName = existingRecs[i].RecordingName,
+                        Composer = existingRecs[i].Composer,
+                        Notes = existingRecs[i].Notes
+                    });
+                }
             }
 
             MusicRecordings = new ObservableCollection<MusicRecording>(musicRecSource);
@@ -93,16 +106,28 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 
         void CreateMusicRemixCollection(List<MusicRemix> existingRems)
         {
-            if (existingRems != null) { 
-                for (int i = 0; i < existingRems.Count; i++)
+            if (existingRems != null) {
+                if (existingRems.Count == 0)
                 {
                     musicRemSource.Add(new MusicRemix
                     {
-                        ID = existingRems[i].ID,
-                        RemixName = existingRems[i].RemixName
+                        ID = -1,
+                        RemixName = ""
                     });
                 }
+                else
+                {
+                    for (int i = 0; i < existingRems.Count; i++)
+                    {
+                        musicRemSource.Add(new MusicRemix
+                        {
+                            ID = existingRems[i].ID,
+                            RemixName = existingRems[i].RemixName
+                        });
+                    }
+                }
             }
+            
             MusicRemixes = new ObservableCollection<MusicRemix>(musicRemSource);
         }
 
@@ -203,6 +228,11 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
             await mNavigation.PushModalAsync(new EditRecordingPage(recordingNav.ID));
         }
 
+        async void EditMusicRemix(MusicRemix remixNav)
+        {
+            await mNavigation.PushModalAsync(new EditRemixPage(remixNav.ID));
+        }
+
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -210,6 +240,20 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null)
+        {
+            if (!Equals(field, newValue))
+            {
+                field = newValue;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                return true;
+            }
+
+            return false;
+        }
+
+        
         #endregion
     }
 }

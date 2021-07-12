@@ -20,7 +20,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding RecordingName}"></Label>
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding RecordingName}" LineBreakMode="TailTruncation" WidthRequest="10"></Label>
                             <Label Text="Start" Grid.Row="1" Grid.Column="2"></Label>
                             <Entry Grid.Row="1" Placeholder="Hr." Grid.Column="3"></Entry>
                             <Entry Grid.Row="1" Placeholder="Min." Grid.Column="4"></Entry>
@@ -30,7 +30,7 @@
                             <Entry Grid.Row="2" Placeholder="Hr." Grid.Column="3"></Entry>
                             <Entry Grid.Row="2" Placeholder="Min." Grid.Column="4"></Entry>
                             <Entry Grid.Row="2" Placeholder="Sec." Grid.Column="5"></Entry>
-                            <Button Text="Preview" Grid.Row="3" Grid.Column="1" Clicked="Button_Clicked"></Button>
+                            <Button Text="Preview" Grid.Row="3" Grid.Column="1" Clicked="Button_Clicked" HeightRequest="50" WidthRequest="100"></Button>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

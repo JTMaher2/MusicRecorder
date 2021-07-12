@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Io.Github.Jtmaher2.MusicRecorder.MainPage">
-    <Grid>
+             x:Class="Io.Github.Jtmaher2.MusicRecorder.MainPageDroid">
+    <Grid RowSpacing="-7">
         <Grid.RowDefinitions>
             <RowDefinition Height="35" />
             <RowDefinition Height="35" />
@@ -73,7 +73,7 @@
                                         CommandParameter="{Binding}" />
                             </StackLayout>
                         </Frame>
-                        <StackLayout Orientation="Vertical">
+                        <StackLayout Orientation="Vertical" Spacing="-10">
                             <Button Text="Preview" Clicked="Button_Clicked" FontSize="Micro" HeightRequest="50"></Button>
                             <Button Text="Mark for Remix" Clicked="Button_Clicked_1" FontSize="Micro" HeightRequest="50"></Button>
                         </StackLayout>
@@ -101,7 +101,7 @@
                                         FontSize="Micro"
                                         BackgroundColor="LightPink"
                                         TextColor="Black"
-                                        WidthRequest="60"
+                                        WidthRequest="70"
                                         Command="{Binding Source={x:Reference carouselView}, Path=BindingContext.DeleteRemixCommand}"
                                         CommandParameter="{Binding}" />
                                 <Button Text="Edit"

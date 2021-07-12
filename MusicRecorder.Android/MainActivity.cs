@@ -23,8 +23,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
             Xamarin.Forms.Forms.SetFlags(new string[] { "SwipeView_Experimental" });
             Xamarin.Forms.Forms.Init(this, savedInstanceState);
 
-            MainPage.RegisterType<IRecordAudio, RecordAudio>();
-            MainPage.BuildContainer();
+            MainPageDroid.RegisterType<IRecordAudio, RecordAudio>();
+            MainPageDroid.BuildContainer();
             LoadApplication(new App());
         }
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)

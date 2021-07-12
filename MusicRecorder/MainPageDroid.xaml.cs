@@ -10,7 +10,7 @@ using Xamarin.Forms.Internals;
 
 namespace Io.Github.Jtmaher2.MusicRecorder
 {
-    public partial class MainPage : ContentPage
+    public partial class MainPageDroid : ContentPage
     {
         static readonly ContainerBuilder builder = new ContainerBuilder();
         readonly IRecordAudio mAudioRecorderService;
@@ -32,13 +32,13 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private List<int> mMarkedForRemixIndexes;
 
-        public MainPage()
+        public MainPageDroid()
         {
             InitializeComponent();
             BuildContainer();
             DependencyResolver.ResolveUsing(type => container.IsRegistered(type) ? container.Resolve(type) : null);
 
-            mAudioRecorderService = DependencyService.Resolve<IRecordAudio>();            
+            mAudioRecorderService = DependencyService.Resolve<IRecordAudio>();
         }
 
         private async void PopulateRecAndRemList()

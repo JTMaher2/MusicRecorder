@@ -10,7 +10,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         {
             InitializeComponent();
 
-            MainPage = new MainPage();
+            MainPage = Device.RuntimePlatform == Device.UWP ? new MainPage() : (Page)new MainPageDroid();
         }
 
         public static MusicRecordingDatabase Database
