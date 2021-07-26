@@ -6,12 +6,29 @@
     <UserSecretsId>9badfc8a-a169-4d25-abc2-f321df0ab951</UserSecretsId>
     <AssemblyName>MusicRecorder</AssemblyName>
     <RootNamespace>Io.Github.Jtmaher2.Musicrecorder</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1.0.5</Version>
+    <Description>App for recording music.</Description>
+    <Authors>James Maher</Authors>
+    <Company />
+    <Product>Music Recorder</Product>
+    <Copyright>2021</Copyright>
+    <PackageReleaseNotes>1.0.2: 1) Fixed issue with crashes occuring when you renamed a recording or remix. 2) Limit name, composer and notes to single line to prevent UI overflow.</PackageReleaseNotes>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageTags>music,recording,sound</PackageTags>
+    <RepositoryType>non-commercial</RepositoryType>
+    <RepositoryUrl>https://www.github.com/JTMaher2/MusicRecorder</RepositoryUrl>
+    <PackageIcon>Square44x44Logo.targetsize-24_altform-unplated.png</PackageIcon>
+    <PackageIconUrl />
+    <PackageProjectUrl>https://www.github.com/JTMaher2/MusicRecorder</PackageProjectUrl>
+    <PackageLicenseExpression>This software is licensed with absolutely NO WARRANTY or FITNESS FOR PURPOSE under the Microsoft Public License (M-PL).</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <ApplicationIcon>Square44x44Logo.targetsize-24_altform-unplated.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,5 +67,12 @@
     <EmbeddedResource Update="RemixPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\MusicRecorderUWP\Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 </Project>

@@ -35,24 +35,47 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private async void Button_Clicked(object sender, EventArgs e)
         {
+            string fileName = fileNameEnt.Text;
+            if (Device.RuntimePlatform == Device.Android)
+            {
+                // Droid
+                if (fileNameEnt.Text != mOrigFileName)
+                {
+                    // new name is different than old name
+                    if (File.Exists(FileSystem.AppDataDirectory + "/" + fileNameEnt.Text + ".opus"))
+                    {
+                        // file already exists, generate unique name
+                        int num = 2;
+                        while (File.Exists(FileSystem.AppDataDirectory + "/" + fileNameEnt.Text + " (" + num + ").opus"))
+                        {
+                            num++;
+                        }
+                        byte[] readBytes = File.ReadAllBytes(FileSystem.AppDataDirectory + "/" + mOrigFileName + ".opus");
+                        File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + fileNameEnt.Text + " (" + num + ").opus", readBytes);
+                    }
+                    else
+                    { // file doesn't already exist, use provided name
+                        byte[] readBytes = File.ReadAllBytes(FileSystem.AppDataDirectory + "/" + mOrigFileName + ".opus");
+                        File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + fileNameEnt.Text + ".opus", readBytes);
+                    }
+
+                    // delete original file
+                    File.Delete(FileSystem.AppDataDirectory + "/" + mOrigFileName + ".opus");
+                }
+            } else
+            {
+                // UWP
+                fileName = mAudioRecorderService.WriteFile(fileNameEnt.Text, mOrigFileName);
+            }
+
             await App.Database.SaveItemAsync(new MusicRecording
             {
                 Composer = composerEnt.Text,
-                RecordingName = fileNameEnt.Text,
+                RecordingName = fileName,
                 Notes = notesEnt.Text,
                 ID = mId
             });
 
-            if (Device.RuntimePlatform == Device.Android)
-            {
-                File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + fileNameEnt.Text + ".opus", File.ReadAllBytes(FileSystem.AppDataDirectory + "/" + mOrigFileName + ".opus"));
-
-                File.Delete(FileSystem.AppDataDirectory + "/" + mOrigFileName + ".opus");
-            } else
-            {
-                // UWP
-                mAudioRecorderService.WriteFile(fileNameEnt.Text, mOrigFileName);
-            }
             await Navigation.PopModalAsync();
         }
 

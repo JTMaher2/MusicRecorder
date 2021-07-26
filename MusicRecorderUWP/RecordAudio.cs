@@ -14,6 +14,7 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using Windows.Media.Editing;
+using System.Text.RegularExpressions;
 
 namespace MusicRecorderUWP
 {
@@ -67,7 +68,7 @@ namespace MusicRecorderUWP
 			return status;
 		}
 
-		public async void Start (string fileName)
+		public async Task<string> Start (string fileName)
 		{
 			await CheckAndRequestMicPermission();
 			await CheckAndRequestMediaPermission();
@@ -80,9 +81,14 @@ namespace MusicRecorderUWP
 				StreamingCaptureMode = StreamingCaptureMode.Audio
 			});
 
+			StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName + ".flac", CreationCollisionOption.GenerateUniqueName);
+
 			_mediaRecording = await mediaCapture.PrepareLowLagRecordToStorageFileAsync(
-					MediaEncodingProfile.CreateFlac(AudioEncodingQuality.High), await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName + ".flac", CreationCollisionOption.GenerateUniqueName));
+				MediaEncodingProfile.CreateFlac(AudioEncodingQuality.High), file);
+			
 			await _mediaRecording.StartAsync();
+
+			return file.DisplayName;
 		}
 
 		public async void Stop ()
@@ -102,12 +108,12 @@ namespace MusicRecorderUWP
 
 			StorageFile foundFile = null;
 
-			// if there are multiple recordings with same name, get most recent one
 			for (int f = 0; f < sf.Count(); f++)
             {
-				if (sf.Skip(f).First().Name == fileName)
+				var thisFile = sf.Skip(f).First();
+				if (thisFile.Name == fileName)
                 {
-					foundFile = sf.Skip(f).First();
+					foundFile = thisFile;
 					break;
                 }
             }
@@ -192,10 +198,39 @@ namespace MusicRecorderUWP
             await composition.RenderToFileAsync(await sf.CreateFileAsync(dest.Substring(dest.LastIndexOf('\\') + 1)), MediaTrimmingPreference.Precise, MediaEncodingProfile.CreateFlac(AudioEncodingQuality.High));
         }
 
-		public void WriteFile(string fileName, string origFileName)
+		public string WriteFile(string fileName, string origFileName)
         {
-            File.WriteAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + ".flac", File.ReadAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName + ".flac"));
-            File.Delete(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName + ".flac");
+			if (fileName != origFileName) {
+				// new name is different than old name
+				if (File.Exists(ApplicationData.Current.LocalFolder.Path + "\\" + fileName))
+				{
+					// file already exists, generate unique name
+					int num = 2;
+					while (File.Exists(ApplicationData.Current.LocalFolder.Path + "\\" + fileName.TrimEnd('c').TrimEnd('a').TrimEnd('l').TrimEnd('f').TrimEnd('.') + " (" + num + ").flac"))
+					{
+						num++;
+					}
+					fileName = fileName.TrimEnd('c').TrimEnd('a').TrimEnd('l').TrimEnd('f').TrimEnd('.') + " (" + num + ")";
+					using (FileStream fs = File.Create(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + ".flac"))
+					{
+						byte[] bytes = File.ReadAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName);
+						fs.Write(bytes, 0, bytes.Length);
+					}
+				}
+				else
+				{ // file doesn't already exist, use provided name
+					using (FileStream fs = File.Create(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + (fileName.EndsWith(".flac") ? "" : ".flac")))
+					{
+						byte[] bytes = File.ReadAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName + (origFileName.EndsWith(".flac") ? "" : ".flac"));
+						fs.Write(bytes, 0, bytes.Length);
+					}
+				}
+
+				// delete original file
+				File.Delete(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName);
+			}
+
+			return fileName;
         }
 	}
 }

@@ -36,7 +36,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 	public class RecordAudio : IRecordAudio
 	{
 		MediaPlayer player = null;
-		static string filePath = FileSystem.AppDataDirectory;
+		static string mFilePath = FileSystem.AppDataDirectory;
 		MediaRecorder recorder = null;
 		bool mCompleted = false; // has the playback completed?
 
@@ -94,37 +94,51 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			return status;
 		}
 
-		public async void Start(string fileName)
+		public async Task<string> Start(string fileName)
 		{
 			await CheckAndRequestMicPermission();
 			await CheckAndRequestWriteExternalStoragePermission();
 			await CheckAndRequestReadExternalStoragePermission();
 
-			if (filePath.LastIndexOf('.') > filePath.LastIndexOf('/'))
+			if (mFilePath.LastIndexOf('.') > mFilePath.LastIndexOf('/'))
             {
-				filePath = filePath.Substring(0, filePath.LastIndexOf('/') + 1);
+				mFilePath = mFilePath.Substring(0, mFilePath.LastIndexOf('/') + 1);
             }
-			if (!Directory.Exists(filePath))
+			string origFilePath = mFilePath;
+			if (!Directory.Exists(mFilePath))
             {
-				Directory.CreateDirectory(filePath);
+				Directory.CreateDirectory(mFilePath);
             }
-			filePath += "/" + fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_') + ".opus";
+			string safeFileName = fileName.Replace('|', '_').Replace('\\', '_').Replace('?', '_').Replace('*', '_').Replace('<', '_').Replace('"', '_').Replace(':', '_').Replace('>', '_').Replace('+', '_').Replace('[', '_').Replace(']', '_').Replace('/', '_').Replace('\'', '_');
+			mFilePath += "/" + safeFileName + ".opus";
 
-			File.Create(filePath);
-			if (File.Exists (filePath))
-				File.Delete (filePath);
+			if (File.Exists (mFilePath))
+            {
+				// file already exists, generate unique name
+				int num = 2;
+				while (File.Exists(origFilePath + "/" + safeFileName + " (" + num + ").opus"))
+				{
+					num++;
+				}
+				mFilePath = origFilePath + "/" + safeFileName + " (" + num + ").opus";
+            }
 
-			if (recorder == null)
-				recorder = new MediaRecorder(); // Initial state.
-			else
-				recorder.Reset();
+			using (FileStream fs = File.Create(mFilePath))
+			{
+				if (recorder == null)
+					recorder = new MediaRecorder(); // Initial state.
+				else
+					recorder.Reset();
 
-			recorder.SetAudioSource(AudioSource.Mic);
-			recorder.SetOutputFormat(OutputFormat.Ogg);
-			recorder.SetAudioEncoder(AudioEncoder.Opus); // Initialized state.
-			recorder.SetOutputFile(filePath); // DataSourceConfigured state.
-			recorder.Prepare(); // Prepared state
-			recorder.Start(); // Recording state.
+				recorder.SetAudioSource(AudioSource.Mic);
+				recorder.SetOutputFormat(OutputFormat.Ogg);
+				recorder.SetAudioEncoder(AudioEncoder.Opus); // Initialized state.
+				recorder.SetOutputFile(mFilePath); // DataSourceConfigured state.
+				recorder.Prepare(); // Prepared state
+				recorder.Start(); // Recording state.
+			}
+
+			return mFilePath[(origFilePath + "/").Length..].TrimEnd('s').TrimEnd('u').TrimEnd('p').TrimEnd('o').TrimEnd('.');
 		}
 
 		public void Stop()
@@ -152,7 +166,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				}
 
 				// This method works better than setting the file path in SetDataSource. Don't know why.
-				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(filePath.Substring(0, filePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".opus") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".opus")).FD);
+				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(mFilePath.Substring(0, mFilePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".opus") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".opus")).FD);
 
 				player.Prepare();
 				player.SeekTo(seekToMS, MediaPlayerSeekMode.Closest);
@@ -205,7 +219,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
             throw new NotImplementedException();
         }
 
-        public void WriteFile(string fileName, string origFileName)
+        public string WriteFile(string fileName, string origFileName)
 		{
             throw new NotImplementedException();
         }

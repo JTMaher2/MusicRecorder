@@ -27,6 +27,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private string mName;
         private string mRemixName;
+        private string mFileName;
 
         Button mSenderBtn; // the button that gets clicked when previewing a recording or remix
 
@@ -79,9 +80,9 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             }
         }
 
-        private void StartRecBtn_Clicked(object sender, EventArgs e)
+        private async void StartRecBtn_Clicked(object sender, EventArgs e)
         {
-            mAudioRecorderService.Start(fileNameEnt.Text);
+            mFileName = await mAudioRecorderService.Start(fileNameEnt.Text);
         }
 
         public static void RegisterType<T>() where T : class
@@ -111,7 +112,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             MusicRecording mr = new MusicRecording
             {
-                RecordingName = fileNameEnt.Text,
+                RecordingName = mFileName,
                 Notes = notesEnt.Text,
                 Composer = composerEnt.Text,
                 ID = id

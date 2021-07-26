@@ -44,6 +44,27 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             if (Device.RuntimePlatform == Device.Android)
             {
+                // new name is different than old name
+                if (File.Exists(FileSystem.AppDataDirectory + "/" + remixNameEnt.Text + ".opus"))
+                {
+                    // file already exists, generate unique name
+                    int num = 2;
+                    while (File.Exists(FileSystem.AppDataDirectory + "/" + remixNameEnt.Text + " (" + num + ").opus"))
+                    {
+                        num++;
+                    }
+                    byte[] readBytes = File.ReadAllBytes(FileSystem.AppDataDirectory + "/" + mOrigFileName);
+                    File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + remixNameEnt.Text + " (" + num + ").opus", readBytes);
+                }
+                else
+                { // file doesn't already exist, use provided name
+                    byte[] readBytes = File.ReadAllBytes(FileSystem.AppDataDirectory + "/" + mOrigFileName);
+                    File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + remixNameEnt.Text + ".opus", readBytes);
+                }
+
+                // delete original file
+                File.Delete(FileSystem.AppDataDirectory + "/" + mOrigFileName + ".opus");
+
                 File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + remixNameEnt.Text, File.ReadAllBytes(FileSystem.AppDataDirectory + "/" + mOrigFileName));
                 File.Delete(FileSystem.AppDataDirectory + "/" + mOrigFileName);
             }

@@ -31,7 +31,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private static readonly int SAMPLE_RATE = 48000;
         private static readonly int NUM_CHANNELS = 2;
         private static readonly int BITRATE = 96000;
-        private List<int> mMarkedForRemixRecs;
+        private readonly List<int> mMarkedForRemixRecs;
 
         public RemixPage(List<int> markedForRemixRecs)
         {
@@ -184,7 +184,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 }
 
                 
-                string fileName = null;
+                string fileName;
                 if (Device.RuntimePlatform == Device.Android)
                 {
                     fileName = externalMediaDir + "/" + ((MusicRecording)ienum.Current).RecordingName + ".opus";
