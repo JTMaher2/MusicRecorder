@@ -209,12 +209,12 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			return mCompleted;
         }
 
-        public void EncodeFlac(string source, string dest)
+        public void EncodeMP3(string source, string dest)
 		{
             throw new NotImplementedException();
         }
 
-        public void WriteFlacRemix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest)
+        public void WriteMp3Remix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest)
 		{
             throw new NotImplementedException();
         }

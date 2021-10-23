@@ -81,10 +81,10 @@ namespace MusicRecorderUWP
 				StreamingCaptureMode = StreamingCaptureMode.Audio
 			});
 
-			StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName + ".flac", CreationCollisionOption.GenerateUniqueName);
+			StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName + ".mp3", CreationCollisionOption.GenerateUniqueName);
 
 			_mediaRecording = await mediaCapture.PrepareLowLagRecordToStorageFileAsync(
-				MediaEncodingProfile.CreateFlac(AudioEncodingQuality.High), file);
+				MediaEncodingProfile.CreateMp3(AudioEncodingQuality.High), file);
 			
 			await _mediaRecording.StartAsync();
 
@@ -164,11 +164,11 @@ namespace MusicRecorderUWP
             return mCompleted;
         }
 
-        public async void EncodeFlac(string source, string dest)
+        public async void EncodeMP3(string source, string dest)
         {
             PrepareTranscodeResult res = await new MediaTranscoder().PrepareFileTranscodeAsync(await StorageFile.GetFileFromPathAsync(source),
                 await (await StorageFolder.GetFolderFromPathAsync(dest.Substring(0, dest.LastIndexOf('\\')))).CreateFileAsync(dest.Substring(dest.LastIndexOf('\\') + 1)),
-                MediaEncodingProfile.CreateFlac(AudioEncodingQuality.High));
+                MediaEncodingProfile.CreateMp3(AudioEncodingQuality.High));
 
             if (res.CanTranscode)
             {
@@ -178,7 +178,7 @@ namespace MusicRecorderUWP
             File.Delete(source);
         }
 
-        public async void WriteFlacRemix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest)
+        public async void WriteMp3Remix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest)
         {
             MediaComposition composition = new MediaComposition();
 
@@ -195,7 +195,7 @@ namespace MusicRecorderUWP
                 composition.Clips.Add(mc);
             }
             StorageFolder sf = await StorageFolder.GetFolderFromPathAsync(dest.Substring(0, dest.LastIndexOf('\\')));
-            await composition.RenderToFileAsync(await sf.CreateFileAsync(dest.Substring(dest.LastIndexOf('\\') + 1)), MediaTrimmingPreference.Precise, MediaEncodingProfile.CreateFlac(AudioEncodingQuality.High));
+            await composition.RenderToFileAsync(await sf.CreateFileAsync(dest.Substring(dest.LastIndexOf('\\') + 1)), MediaTrimmingPreference.Precise, MediaEncodingProfile.CreateMp3(AudioEncodingQuality.High));
         }
 
 		public string WriteFile(string fileName, string origFileName)
@@ -206,12 +206,12 @@ namespace MusicRecorderUWP
 				{
 					// file already exists, generate unique name
 					int num = 2;
-					while (File.Exists(ApplicationData.Current.LocalFolder.Path + "\\" + fileName.TrimEnd('c').TrimEnd('a').TrimEnd('l').TrimEnd('f').TrimEnd('.') + " (" + num + ").flac"))
+					while (File.Exists(ApplicationData.Current.LocalFolder.Path + "\\" + fileName.TrimEnd('c').TrimEnd('a').TrimEnd('l').TrimEnd('f').TrimEnd('.') + " (" + num + ").mp3"))
 					{
 						num++;
 					}
 					fileName = fileName.TrimEnd('c').TrimEnd('a').TrimEnd('l').TrimEnd('f').TrimEnd('.') + " (" + num + ")";
-					using (FileStream fs = File.Create(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + ".flac"))
+					using (FileStream fs = File.Create(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + ".mp3"))
 					{
 						byte[] bytes = File.ReadAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName);
 						fs.Write(bytes, 0, bytes.Length);
@@ -219,9 +219,9 @@ namespace MusicRecorderUWP
 				}
 				else
 				{ // file doesn't already exist, use provided name
-					using (FileStream fs = File.Create(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + (fileName.EndsWith(".flac") ? "" : ".flac")))
+					using (FileStream fs = File.Create(ApplicationData.Current.LocalFolder.Path + "\\" + fileName + (fileName.EndsWith(".mp3") ? "" : ".mp3")))
 					{
-						byte[] bytes = File.ReadAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName + (origFileName.EndsWith(".flac") ? "" : ".flac"));
+						byte[] bytes = File.ReadAllBytes(ApplicationData.Current.LocalFolder.Path + "\\" + origFileName + (origFileName.EndsWith(".mp3") ? "" : ".mp3"));
 						fs.Write(bytes, 0, bytes.Length);
 					}
 				}

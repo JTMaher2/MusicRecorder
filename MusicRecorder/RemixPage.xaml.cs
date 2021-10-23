@@ -116,7 +116,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             if (mSenderBtn.Text == "Preview")
             {
-                mAudioRecorderService.PreviewRecording(name + (Device.RuntimePlatform == Device.Android ? ".opus" : ".flac"),
+                mAudioRecorderService.PreviewRecording(name + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"),
                     _startingDT - _nowMillis,
                     _endingDT - _nowMillis);
                 mSenderBtn.Text = "Stop";
@@ -190,7 +190,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                     fileName = externalMediaDir + "/" + ((MusicRecording)ienum.Current).RecordingName + ".opus";
                 } else
                 { // UWP
-                    fileName = externalMediaDir + "\\" + ((MusicRecording)ienum.Current).RecordingName + ".flac";
+                    fileName = externalMediaDir + "\\" + ((MusicRecording)ienum.Current).RecordingName + ".mp3";
                 }
                 orders.Add(order, new object[3] { fileName, new int[3] { startHr, startMin, startSec }, new int[3] { endHr, endMin, endSec } });
 
@@ -201,7 +201,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             await App.Database.SaveRemixItemAsync(new MusicRemix
             {
                 ID = 0,
-                RemixName = Device.RuntimePlatform == Device.Android ? $"{combinedRemNamesStr}.opus" : $"{combinedRemNamesStr}.flac",
+                RemixName = Device.RuntimePlatform == Device.Android ? $"{combinedRemNamesStr}.opus" : $"{combinedRemNamesStr}.mp3",
                 MusicRecordings = mMarkedForRemixRecs
             });
 
@@ -232,7 +232,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
                     if (Device.RuntimePlatform == Device.UWP)
                     {
-                        // UWP uses FLAC format
+                        // UWP uses MP3 format
                         sources.Add((string)fileOgg[0]);
                         startTimes.Add(startTimeSpan);
                         endTimes.Add(endTimeSpan);
@@ -297,7 +297,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 File.Delete(externalMediaDir + "/" + combinedRemNamesStr + ".wav");
             } else
             { // UWP
-                mAudioRecorderService.WriteFlacRemix(sources, startTimes, endTimes, externalMediaDir + "\\" + combinedRemNamesStr + ".flac");
+                mAudioRecorderService.WriteMp3Remix(sources, startTimes, endTimes, externalMediaDir + "\\" + combinedRemNamesStr + ".mp3");
             }
 
             if (Device.RuntimePlatform == Device.Android)
@@ -317,7 +317,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             short[] processedValues = new short[input.Length / 2];
             for (int c = 0; c < processedValues.Length; c++)
             {
-                processedValues[c] = (short)(input[(c * 2)] << 0);
+                processedValues[c] = (short)(input[c * 2] << 0);
                 processedValues[c] += (short)(input[(c * 2) + 1] << 8);
             }
 

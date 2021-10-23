@@ -103,7 +103,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private void PreviewRecBtn_Clicked(object sender, EventArgs e)
         {
-            mAudioRecorderService.PreviewRecording(fileNameEnt.Text + (Device.RuntimePlatform == Device.Android ? ".opus" : ".flac"), 0, 0);
+            mAudioRecorderService.PreviewRecording(fileNameEnt.Text + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
         }
 
         private async void SaveRecBtn_Clicked(object sender, EventArgs e)
@@ -134,7 +134,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             if (mSenderBtn.Text == "Preview")
             {
-                mAudioRecorderService.PreviewRecording(mName + (Device.RuntimePlatform == Device.Android ? ".opus" : ".flac"), 0, 0);
+                mAudioRecorderService.PreviewRecording(mName + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
                 mSenderBtn.Text = "Stop";
             }
             else

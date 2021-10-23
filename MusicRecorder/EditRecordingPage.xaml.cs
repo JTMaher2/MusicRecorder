@@ -83,7 +83,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         {
             if (previewRecBtn.Text == "Preview Recording")
             {
-                mAudioRecorderService.PreviewRecording(fileNameEnt.Text + (Device.RuntimePlatform == Device.Android ? ".opus" : ".flac"), 0, 0);
+                mAudioRecorderService.PreviewRecording(fileNameEnt.Text + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
                 previewRecBtn.Text = "Stop";
 
                 

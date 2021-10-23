@@ -12,8 +12,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Services
         void PreviewRecording(string fileName, long seekToMS, long stopAtMS);
         void StopPreviewRecording();
         bool IsCompleted();
-        void EncodeFlac(string source, string dest);
-        void WriteFlacRemix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest);
+        void EncodeMP3(string source, string dest);
+        void WriteMp3Remix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest);
         string WriteFile(string fileName, string origFileName);
     }
 }
