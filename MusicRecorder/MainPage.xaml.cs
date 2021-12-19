@@ -226,5 +226,10 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         {
             await Navigation.PushModalAsync(new RemixPage(mMarkedForRemixIndexes));
         }
+
+        private async void ImportRecBtn_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PushModalAsync(new ImportRecPage());
+        }
     }
 }

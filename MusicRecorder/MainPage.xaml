@@ -14,7 +14,9 @@
             <RowDefinition Height="35" />
             <RowDefinition Height="35" />
             <RowDefinition Height="35" />
-            <RowDefinition Height="150" />
+            <RowDefinition Height="35" />
+            <RowDefinition Height="225" />
+            <RowDefinition Height="35" />
             <RowDefinition Height="35" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -30,7 +32,8 @@
         <Button Grid.Row="7"  x:Name="stopRecBtn" Text="Stop Recording" Clicked="StopRecBtn_Clicked" FontSize="Micro"></Button>
         <Button Grid.Row="8" x:Name="previewRecBtn" Text="Preview Recording" Clicked="PreviewRecBtn_Clicked" IsEnabled="False" FontSize="Micro"></Button>
         <Button Grid.Row="9" x:Name="saveRecBtn" Text="Save Recording" Clicked="SaveRecBtn_Clicked" FontSize="Micro"></Button>
-        <CarouselView Grid.Row="10" Grid.RowSpan="4" x:Name="carouselView"
+        <Button Grid.Row="10" x:Name="importRecBtn" Text="Import Recording" Clicked="ImportRecBtn_Clicked" FontSize="Micro"></Button>
+        <CarouselView Grid.Row="11" Grid.RowSpan="4" x:Name="carouselView"
                   ItemsSource="{Binding MusicRecordings}" CurrentItemChanged="CarouselView_CurrentItemChanged">
             <CarouselView.ItemTemplate>
                 <DataTemplate>
@@ -85,8 +88,8 @@
                 
             </CarouselView.ItemTemplate>
         </CarouselView>
-        <Button Text="Remix Selected Recordings" Grid.Row="13"  Clicked="Button_Clicked_2" FontSize="Micro"></Button>
-        <CarouselView Grid.Row="14"  x:Name="remixCarouselView" 
+        <Button Text="Remix Selected Recordings" Grid.Row="14"  Clicked="Button_Clicked_2" FontSize="Micro"></Button>
+        <CarouselView Grid.Row="15"  x:Name="remixCarouselView" 
                   ItemsSource="{Binding MusicRemixes}" CurrentItemChanged="CarouselView_RemixCurrentItemChanged">
             <CarouselView.ItemTemplate>
                 <DataTemplate>

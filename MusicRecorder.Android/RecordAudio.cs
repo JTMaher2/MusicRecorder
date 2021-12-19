@@ -102,7 +102,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 
 			if (mFilePath.LastIndexOf('.') > mFilePath.LastIndexOf('/'))
             {
-				mFilePath = mFilePath.Substring(0, mFilePath.LastIndexOf('/') + 1);
+				mFilePath = mFilePath[..(mFilePath.LastIndexOf('/') + 1)];
             }
 			string origFilePath = mFilePath;
 			if (!Directory.Exists(mFilePath))
@@ -126,7 +126,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			using (FileStream fs = File.Create(mFilePath))
 			{
 				if (recorder == null)
-					recorder = new MediaRecorder(); // Initial state.
+					recorder = new MediaRecorder(Application.Context); // Initial state.
 				else
 					recorder.Reset();
 
@@ -166,7 +166,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				}
 
 				// This method works better than setting the file path in SetDataSource. Don't know why.
-				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(mFilePath.Substring(0, mFilePath.LastIndexOf("/")) + "/" + (fileName.EndsWith(".opus") ? fileName.Substring(0, fileName.LastIndexOf('.')) : fileName) + ".opus")).FD);
+				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(mFilePath[..mFilePath.LastIndexOf("/")] + "/" + (fileName.EndsWith(".opus") ? fileName[..fileName.LastIndexOf('.')] : fileName) + ".opus")).FD);
 
 				player.Prepare();
 				player.SeekTo(seekToMS, MediaPlayerSeekMode.Closest);
@@ -221,6 +221,16 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 
         public string WriteFile(string fileName, string origFileName)
 		{
+            throw new NotImplementedException();
+        }
+
+        public void Import(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<string> IRecordAudio.Import(string filePath)
+        {
             throw new NotImplementedException();
         }
     }

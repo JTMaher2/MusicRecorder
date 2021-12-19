@@ -14,7 +14,6 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using Windows.Media.Editing;
-using System.Text.RegularExpressions;
 
 namespace MusicRecorderUWP
 {
@@ -49,6 +48,44 @@ namespace MusicRecorderUWP
 			return status;
 		}
 
+		public async Task<PermissionStatus> CheckAndRequestStorageReadPermission()
+		{
+			var status = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+
+			if (status == PermissionStatus.Granted)
+				return status;
+
+			if (Permissions.ShouldShowRationale<Permissions.StorageRead>())
+			{
+				// Prompt the user with additional information as to why the permission is needed
+				var dialog = new MessageDialog("Please enable the storage read permission in order to import media.");
+				await dialog.ShowAsync();
+			}
+
+			status = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+			return status;
+		}
+
+		public async Task<PermissionStatus> CheckAndRequestStorageWritePermission()
+		{
+			var status = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
+
+			if (status == PermissionStatus.Granted)
+				return status;
+
+			if (Permissions.ShouldShowRationale<Permissions.StorageWrite>())
+			{
+				// Prompt the user with additional information as to why the permission is needed
+				var dialog = new MessageDialog("Please enable the storage write permission in order to save recordings.");
+				await dialog.ShowAsync();
+			}
+
+			status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+
+			return status;
+		}
+
 		public async Task<PermissionStatus> CheckAndRequestMediaPermission()
 		{
 			var status = await Permissions.CheckStatusAsync<Permissions.Media>();
@@ -59,11 +96,11 @@ namespace MusicRecorderUWP
 			if (Permissions.ShouldShowRationale<Permissions.Media>())
 			{
 				// Prompt the user with additional information as to why the permission is needed
-				var dialog = new MessageDialog("Please enable the media permission in order to record audio.");
+				var dialog = new MessageDialog("Please enable the media permission in order to import audio.");
 				await dialog.ShowAsync();
 			}
 
-			status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+			status = await Permissions.RequestAsync<Permissions.Media>();
 
 			return status;
 		}
@@ -71,7 +108,7 @@ namespace MusicRecorderUWP
 		public async Task<string> Start (string fileName)
 		{
 			await CheckAndRequestMicPermission();
-			await CheckAndRequestMediaPermission();
+			await CheckAndRequestStorageWritePermission();
 
 			// create file in folder
 			mediaCapture = new MediaCapture();
@@ -232,5 +269,25 @@ namespace MusicRecorderUWP
 
 			return fileName;
         }
-	}
+
+		public async Task<string> Import(string filePathEntry)
+        {
+			string fileName = filePathEntry.Substring(filePathEntry.LastIndexOf('\\') + 1);
+
+			Windows.Storage.FileProperties.MusicProperties musicProperties =
+				await (await ApplicationData.Current.LocalFolder.GetFileAsync(fileName)).Properties.GetMusicPropertiesAsync();
+
+			// copy to local directory
+			await FileIO.WriteBufferAsync(await ApplicationData.Current.LocalFolder.CreateFileAsync(musicProperties.Title + ".mp3",
+				CreationCollisionOption.ReplaceExisting), await FileIO.ReadBufferAsync(await KnownFolders.MusicLibrary.GetFileAsync(fileName)));
+
+			// add to library
+			return System.Text.Json.JsonSerializer.Serialize(new MusicRecording
+			{
+				Composer = string.Join(',', musicProperties.Composers),
+				RecordingName = musicProperties.Title,
+				Notes = musicProperties.Subtitle
+			});
+		}
+    }
 }

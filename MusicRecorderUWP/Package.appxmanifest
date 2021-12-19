@@ -47,6 +47,7 @@
   </Applications>
 
   <Capabilities>
+    <uap:Capability Name="musicLibrary"/>
     <DeviceCapability Name="microphone"/>
   </Capabilities>
 </Package>
