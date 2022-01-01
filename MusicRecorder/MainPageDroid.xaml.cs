@@ -26,6 +26,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private int mID;
 
         private string mName;
+        private string mRealName;
         private string mRemixName;
         private string mFileName;
 
@@ -60,8 +61,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             if (mExistingRecs.Count > 0)
             {
                 mID = mExistingRecs[0].ID;
-
                 mName = mExistingRecs[0].RecordingName;
+                mRealName = mExistingRecs[0].RealRecordingName;
             }
 
             if (mExistingRems.Count > 0)
@@ -103,7 +104,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private void PreviewRecBtn_Clicked(object sender, EventArgs e)
         {
-            mAudioRecorderService.PreviewRecording(fileNameEnt.Text + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
+            mAudioRecorderService.PreviewRecording(mRealName + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
         }
 
         private async void SaveRecBtn_Clicked(object sender, EventArgs e)
@@ -113,6 +114,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             MusicRecording mr = new MusicRecording
             {
                 RecordingName = mFileName,
+                RealRecordingName = fileNameEnt.Text,
                 Notes = notesEnt.Text,
                 Composer = composerEnt.Text,
                 ID = id
@@ -134,7 +136,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             if (mSenderBtn.Text == "Preview")
             {
-                mAudioRecorderService.PreviewRecording(mName + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
+                mAudioRecorderService.PreviewRecording(mRealName, 0, 0);
                 mSenderBtn.Text = "Stop";
             }
             else
@@ -198,6 +200,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 mID = ((MusicRecording)e.CurrentItem).ID;
                 mName = ((MusicRecording)e.CurrentItem).RecordingName;
+                mRealName = ((MusicRecording)e.CurrentItem).RealRecordingName;
             }
         }
         
@@ -225,6 +228,11 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private async void Button_Clicked_2(object sender, EventArgs e)
         {
             await Navigation.PushModalAsync(new RemixPage(mMarkedForRemixIndexes));
+        }
+
+        private async void ImportRecBtn_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PushModalAsync(new ImportRecPage());
         }
     }
 }

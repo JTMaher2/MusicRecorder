@@ -15,6 +15,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Services
         void EncodeMP3(string source, string dest);
         void WriteMp3Remix(List<string> sources, List<TimeSpan> startTimes, List<TimeSpan> stopTimes, string dest);
         string WriteFile(string fileName, string origFileName);
-        Task<string> Import(string filePath);
+        Task<string> Import(string filePath, string notes);
     }
 }

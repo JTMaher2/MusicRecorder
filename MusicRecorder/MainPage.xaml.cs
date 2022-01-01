@@ -114,6 +114,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 RecordingName = mRecName,
                 Notes = notesEnt.Text,
+                RealRecordingName = fileNameEnt.Text,
                 Composer = composerEnt.Text,
                 ID = id
             };

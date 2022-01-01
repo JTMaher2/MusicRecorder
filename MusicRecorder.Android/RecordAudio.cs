@@ -166,7 +166,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 				}
 
 				// This method works better than setting the file path in SetDataSource. Don't know why.
-				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(mFilePath[..mFilePath.LastIndexOf("/")] + "/" + (fileName.EndsWith(".opus") ? fileName[..fileName.LastIndexOf('.')] : fileName) + ".opus")).FD);
+				await player.SetDataSourceAsync(new Java.IO.FileInputStream(new Java.IO.File(mFilePath[..mFilePath.LastIndexOf("/")] + "/files/" + (fileName.EndsWith(".opus") ? fileName[..fileName.LastIndexOf('.')] : fileName) + ".opus")).FD);
 
 				player.Prepare();
 				player.SeekTo(seekToMS, MediaPlayerSeekMode.Closest);
@@ -224,14 +224,22 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
             throw new NotImplementedException();
         }
 
-        public void Import(string filePath)
+        Task<string> IRecordAudio.Import(string filePathEntry, string notes)
         {
-            throw new NotImplementedException();
-        }
+			MediaMetadataRetriever musicProperties = new MediaMetadataRetriever();
+			musicProperties.SetDataSource(filePathEntry);
 
-        Task<string> IRecordAudio.Import(string filePath)
-        {
-            throw new NotImplementedException();
-        }
+			// copy to local directory
+			File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + filePathEntry[(filePathEntry.LastIndexOf('/') + 1)..], File.ReadAllBytes(filePathEntry));
+			
+			// add to library
+			return Task.FromResult(System.Text.Json.JsonSerializer.Serialize(new MusicRecording
+			{
+				Composer = string.Join(',', musicProperties.ExtractMetadata(MetadataKey.Composer)),
+				RealRecordingName = filePathEntry[(filePathEntry.LastIndexOf("/") + 1)..],
+				RecordingName = musicProperties.ExtractMetadata(MetadataKey.Title),
+				Notes = notes
+			}));
+		}
     }
 }

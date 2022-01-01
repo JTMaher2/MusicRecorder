@@ -270,7 +270,7 @@ namespace MusicRecorderUWP
 			return fileName;
         }
 
-		public async Task<string> Import(string filePathEntry)
+		public async Task<string> Import(string filePathEntry, string notes)
         {
 			string fileName = filePathEntry.Substring(filePathEntry.LastIndexOf('\\') + 1);
 
@@ -286,7 +286,7 @@ namespace MusicRecorderUWP
 			{
 				Composer = string.Join(',', musicProperties.Composers),
 				RecordingName = musicProperties.Title,
-				Notes = musicProperties.Subtitle
+				Notes = notes
 			});
 		}
     }

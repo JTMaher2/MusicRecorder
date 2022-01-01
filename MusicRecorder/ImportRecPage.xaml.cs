@@ -25,7 +25,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
                 if (result != null)
                 {
-                    await App.Database.SaveItemAsync(System.Text.Json.JsonSerializer.Deserialize<MusicRecording>(await mAudioRecorderService.Import(result.FileName)));
+                    await App.Database.SaveItemAsync(System.Text.Json.JsonSerializer.Deserialize<MusicRecording>(await mAudioRecorderService.Import(result.FullPath, notes.Text)));
                 }
             }
             catch (Exception ex)
