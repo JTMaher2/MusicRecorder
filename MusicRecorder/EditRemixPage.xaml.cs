@@ -1,10 +1,25 @@
-﻿using Io.Github.Jtmaher2.MusicRecorder.Services;
+﻿/*
+ * Copyright 2022 James Maher
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+using Io.Github.Jtmaher2.MusicRecorder.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
-//using Windows.Storage;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -28,10 +43,18 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private async void Populate(int id)
         {
             MusicRemix mr = await App.Database.GetRemixItemAsync(id);
-            mId = mr.ID;
-            remixNameEnt.Text = mr.RemixName;
-            mMusicRecordings = mr.MusicRecordings;
-            mOrigFileName = remixNameEnt.Text;
+
+            if (mr == null)
+            {
+                await Navigation.PopModalAsync();
+            }
+            else
+            {
+                mId = mr.ID;
+                remixNameEnt.Text = mr.RemixName;
+                mMusicRecordings = string.IsNullOrWhiteSpace(mr.MusicRecordings) ? new List<int>() : System.Text.Json.JsonSerializer.Deserialize<List<int>>(mr.MusicRecordings);
+                mOrigFileName = remixNameEnt.Text;
+            }
         }
 
         private async void Button_Clicked(object sender, EventArgs e)
@@ -39,7 +62,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             await App.Database.SaveRemixItemAsync(new MusicRemix
             {
                 RemixName = remixNameEnt.Text,
-                ID = mId
+                ID = mId,
+                MusicRecordings = System.Text.Json.JsonSerializer.Serialize(mMusicRecordings)
             });
 
             if (Device.RuntimePlatform == Device.Android)
@@ -82,8 +106,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 mAudioRecorderService.PreviewRecording(remixNameEnt.Text, 0, 0);
                 previewRemBtn.Text = "Stop";
-
-                
             }
             else
             {
@@ -117,7 +139,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private async void startRemBtn_Clicked(object sender, EventArgs e)
         {
 
-            await Navigation.PushModalAsync(new RemixPage(mMusicRecordings));
+            await Navigation.PushModalAsync(new RemixPage(mMusicRecordings, mId));
         }
 
         private void stopRemBtn_Clicked(object sender, EventArgs e)

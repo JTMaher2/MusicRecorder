@@ -6,23 +6,24 @@
     <UserSecretsId>9badfc8a-a169-4d25-abc2-f321df0ab951</UserSecretsId>
     <AssemblyName>MusicRecorder</AssemblyName>
     <RootNamespace>Io.Github.Jtmaher2.Musicrecorder</RootNamespace>
-    <Version>1.0.5</Version>
+    <Version>1.0.7</Version>
     <Description>App for recording music.</Description>
     <Authors>James Maher</Authors>
     <Company />
     <Product>Music Recorder</Product>
-    <Copyright>2021</Copyright>
-    <PackageReleaseNotes>1.0.2: 1) Fixed issue with crashes occuring when you renamed a recording or remix. 2) Limit name, composer and notes to single line to prevent UI overflow.</PackageReleaseNotes>
+    <Copyright>2022</Copyright>
+    <PackageReleaseNotes>1.0.7: 1) Made it possible to re-order remix list using touch gestures, 2) Made it possible to visually select start and stop times of remixes using Syncfusion time picker widget, 3) Fixed crashes on remix page., 4) Go back to main page after importing a recording.</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>music,recording,sound</PackageTags>
-    <RepositoryType>non-commercial</RepositoryType>
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://www.github.com/JTMaher2/MusicRecorder</RepositoryUrl>
     <PackageIcon>Square44x44Logo.targetsize-24_altform-unplated.png</PackageIcon>
     <PackageIconUrl />
     <PackageProjectUrl>https://www.github.com/JTMaher2/MusicRecorder</PackageProjectUrl>
-    <PackageLicenseExpression>This software is licensed with absolutely NO WARRANTY or FITNESS FOR PURPOSE under the Microsoft Public License (M-PL).</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <ApplicationIcon>Square44x44Logo.targetsize-24_altform-unplated.ico</ApplicationIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>F:\Xamarin Projects\MusicRecorder\LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -32,15 +33,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="SyncfusionLicense.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="SyncfusionLicense.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.4" />
     <PackageReference Include="Autofac" Version="6.3.0" />
     <PackageReference Include="Concentus.OggFile" Version="1.0.4" />
     <PackageReference Include="NAudio.Core" Version="2.0.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
     <PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
+    <PackageReference Include="Syncfusion.Xamarin.SfPicker" Version="19.4.0.48" />
     <PackageReference Include="System.Text.Json" Version="6.0.1" />
-    <PackageReference Include="Xamarin.Essentials" Version="1.7.0" />
-    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2291" />
+    <PackageReference Include="Xamarin.CommunityToolkit" Version="2.0.0" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.7.1" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2337" />
   </ItemGroup>
 
   <ItemGroup>
@@ -77,6 +90,10 @@
     <None Include="..\MusicRecorderUWP\Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="1.0.6" package="io.github.jtmaher2.musicrecorder" android:installLocation="auto" android:versionCode="6">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="1.0.7" package="io.github.jtmaher2.musicrecorder" android:installLocation="preferExternal" android:versionCode="7">
 	<uses-sdk android:minSdkVersion="29" android:targetSdkVersion="31" />
 	<application android:requestLegacyExternalStorage="true" android:label="Music Recorder" android:theme="@style/MainTheme" android:icon="@mipmap/icon"></application>
 	<uses-permission android:name="android.permission.RECORD_AUDIO" />

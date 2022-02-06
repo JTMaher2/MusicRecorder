@@ -1,36 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+             xmlns:timePicker="clr-namespace:Syncfusion.XForms.Pickers;assembly=Syncfusion.SfPicker.XForms"
              x:Class="Io.Github.Jtmaher2.MusicRecorder.RemixPage">
     <ContentPage.Content>
         <StackLayout Orientation="Vertical">
             <CollectionView x:Name="MusicRecColView" ItemsSource="{Binding MusicRecordings}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Padding="10" x:Name="pieceGrid">
+                        <Grid Padding="0" x:Name="pieceGrid">
+                            <!-- Add gesture recognizers for allowing user to visually drag and drop recordings in remix list -->
+                            <Grid.GestureRecognizers>
+                                <DragGestureRecognizer
+                                    CanDrag="True"
+                                    DragStartingCommand="{Binding BindingContext.ItemDragged, Source={x:Reference MusicRecColView}}"
+                                    DragStartingCommandParameter="{Binding}" />
+                                <DropGestureRecognizer
+                                    AllowDrop="True"
+                                    Drop="DropGestureRecognizer_Drop_Collection"
+                                    DropCommand="{Binding BindingContext.ItemDropped, Source={x:Reference MusicRecColView}}"
+                                    DropCommandParameter="{Binding}"/>
+                            </Grid.GestureRecognizers>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="200" />
+                                <RowDefinition Height="200" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Label Grid.Row="1" Grid.Column="1" Text="{Binding RecordingName}" LineBreakMode="TailTruncation" WidthRequest="10"></Label>
-                            <Label Text="Start" Grid.Row="1" Grid.Column="2"></Label>
-                            <Entry Grid.Row="1" Placeholder="Hr." Grid.Column="3"></Entry>
-                            <Entry Grid.Row="1" Placeholder="Min." Grid.Column="4"></Entry>
-                            <Entry Grid.Row="1" Placeholder="Sec." Grid.Column="5"></Entry>
-                            <Entry Grid.Row="2" Grid.Column="1" Placeholder="Order"></Entry>
-                            <Label Text="End" Grid.Row="2" Grid.Column="2"></Label>
-                            <Entry Grid.Row="2" Placeholder="Hr." Grid.Column="3"></Entry>
-                            <Entry Grid.Row="2" Placeholder="Min." Grid.Column="4"></Entry>
-                            <Entry Grid.Row="2" Placeholder="Sec." Grid.Column="5"></Entry>
-                            <Button Text="Preview" Grid.Row="3" Grid.Column="1" Clicked="Button_Clicked" HeightRequest="50" WidthRequest="100"></Button>
+                            <timePicker:SfTimePicker Grid.Row="2" Grid.Column="1" ShowHeader="True" ShowColumnHeader="True" EnableLooping="True" SelectedItemFontSize="12" UnselectedItemFontSize="12"
+                                                  Format="H_mm_ss" HeaderText="Start" PickerMode="Default" Time="00:00:00" />
+                            <timePicker:SfTimePicker Grid.Row="3" Grid.Column="1" ShowHeader="True" ShowColumnHeader="True" EnableLooping="True" SelectedItemFontSize="12" UnselectedItemFontSize="12"
+                                                  Format="H_mm_ss" HeaderText="End" PickerMode="Default" Time="00:00:00" />
+                            <Button Text="Preview" Grid.Row="4" Grid.Column="1" Clicked="Button_Clicked" HeightRequest="50" WidthRequest="100"></Button>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

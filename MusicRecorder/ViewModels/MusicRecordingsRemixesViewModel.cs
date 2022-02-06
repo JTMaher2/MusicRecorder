@@ -1,15 +1,31 @@
-﻿using Io.Github.Jtmaher2.MusicRecorder;
+﻿/*
+ * Copyright 2022 James Maher
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Xamarin.Forms;
+using Xamarin.CommunityToolkit.ObjectModel;
+using Xamarin.Forms.Internals;
 
 namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 {
-    public class MusicRecordingsRemixesViewModel : INotifyPropertyChanged
+    public class MusicRecordingsRemixesViewModel : ObservableObject, INotifyPropertyChanged
     {
         readonly IList<MusicRecording> musicRecSource;
         readonly IList<MusicRemix> musicRemSource;
@@ -25,9 +41,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 
         public MusicRecording CurrentMusicRecording { get; set; }
         public MusicRemix CurrentMusicRemix { get; set; }
-
-        public MusicRecording CurrentItem { get; set; }
-        public MusicRemix CurrentRemixItem { get; set; }
 
         public int PreviousPosition { get; set; }
         public int PreviousRemixPosition { get; set; }
@@ -53,6 +66,9 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
         public ICommand EditCommand => new Command<MusicRecording>(EditMusicRecording);
         public ICommand EditRemixCommand => new Command<MusicRemix>(EditMusicRemix);
 
+        public ICommand ItemDragged { get; }
+        public ICommand ItemDropped { get; }
+
         private readonly INavigation mNavigation;
 
         private readonly Page mPage;
@@ -66,8 +82,11 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
             CreateMusicRecordingCollection(existingRecs);
             CreateMusicRemixCollection(existingRems);
 
-            CurrentItem = MusicRecordings.Skip(0).FirstOrDefault();
-            CurrentRemixItem = MusicRemixes.Skip(0).FirstOrDefault();
+            CurrentMusicRecording = MusicRecordings.Skip(0).FirstOrDefault();
+            CurrentMusicRemix = MusicRemixes.Skip(0).FirstOrDefault();
+            ItemDragged = new Command<MusicRecording>(OnItemDragged);
+
+            ItemDropped = new Command<MusicRecordingsRemixesViewModel>(i => OnItemDropped(CurrentMusicRecording));
 
             mPage = page;
 
@@ -233,27 +252,24 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
             await mNavigation.PushModalAsync(new EditRemixPage(remixNav.ID));
         }
 
-        #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnItemDragged(MusicRecording item)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            MusicRecordings.ForEach(i => i.m_bIsBeingDragged = item == i);
         }
 
-        protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null)
+        public void OnItemDropped(MusicRecording CItem)
         {
-            if (!Equals(field, newValue))
-            {
-                field = newValue;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-                return true;
-            }
+            MusicRecording CItemToMove = MusicRecordings.First(i => i.m_bIsBeingDragged);
+            
+            if (CItemToMove == null || CItem == null || CItemToMove == CItem)
+                return;
+            
+            int iIndex = MusicRecordings.IndexOf(CItem);
 
-            return false;
+            MusicRecordings.Remove(CItemToMove);
+            MusicRecordings.Insert(iIndex, CItemToMove);
+            
+            CItemToMove.m_bIsBeingDragged = false;
         }
-
-        
-        #endregion
     }
 }

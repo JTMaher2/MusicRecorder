@@ -1,4 +1,20 @@
-﻿using Io.Github.Jtmaher2.MusicRecorder.Services;
+﻿/*
+ * Copyright 2022 James Maher
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+using Io.Github.Jtmaher2.MusicRecorder.Services;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -26,11 +42,18 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private async void Populate(int id)
         {
             MusicRecording mr = await App.Database.GetItemAsync(id);
-            mId = mr.ID;
-            composerEnt.Text = mr.Composer;
-            fileNameEnt.Text = mr.RecordingName;
-            mOrigFileName = fileNameEnt.Text;
-            notesEnt.Text = mr.Notes;
+            if (mr == null)
+            {
+                await Navigation.PopModalAsync();
+            }
+            else
+            {
+                mId = mr.ID;
+                composerEnt.Text = mr.Composer;
+                fileNameEnt.Text = mr.RecordingName;
+                mOrigFileName = fileNameEnt.Text;
+                notesEnt.Text = mr.Notes;
+            }
         }
 
         private async void Button_Clicked(object sender, EventArgs e)
@@ -86,8 +109,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 mAudioRecorderService.PreviewRecording(fileNameEnt.Text + (Device.RuntimePlatform == Device.Android ? ".opus" : ".mp3"), 0, 0);
                 previewRecBtn.Text = "Stop";
-
-                
             }
             else
             {

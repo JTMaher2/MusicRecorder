@@ -1,0 +1,1 @@
+You must independently obtain the Syncfusion Xamarin dependencies from Syncfusion under a community, commercial or other license.

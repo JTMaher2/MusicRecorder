@@ -8,6 +8,10 @@
 */obj
 /io.github.jtmaher2.musicrecorder.apk
 /MusicRecorder.db3
-/test.ogg
-/test2.ogg
+/*.ogg
+/*.mp3
+/*.flac
+/*.opus
 /MusicRecorderUWP/AppPackages
+/MusicRecorder/SyncfusionLicense.txt
+/MusicRecorder.Android/Resources

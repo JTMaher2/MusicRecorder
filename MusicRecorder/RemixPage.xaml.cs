@@ -1,4 +1,20 @@
-﻿using Concentus.Enums;
+﻿/*
+ * Copyright 2022 James Maher
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+using Concentus.Enums;
 using Concentus.Oggfile;
 using Concentus.Structs;
 using Io.Github.Jtmaher2.MusicRecorder.Services;
@@ -15,7 +31,6 @@ using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
-using static Xamarin.Forms.Grid;
 
 namespace Io.Github.Jtmaher2.MusicRecorder
 {
@@ -32,13 +47,15 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         private static readonly int NUM_CHANNELS = 2;
         private static readonly int BITRATE = 96000;
         private readonly List<int> mMarkedForRemixRecs;
+        private readonly int m_IID;
 
-        public RemixPage(List<int> markedForRemixRecs)
+        public RemixPage(List<int> markedForRemixRecs, int iID)
         {
             InitializeComponent();
 
             mAudioRecorderService = DependencyService.Resolve<IRecordAudio>();
             mMarkedForRemixRecs = markedForRemixRecs;
+            m_IID = iID;
             LoadPage(markedForRemixRecs);
         }
 
@@ -61,7 +78,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private void Button_Clicked(object sender, EventArgs e)
         {
-            IGridList<View> children = ((Grid)((Button)sender).Parent).Children;
+            Grid.IGridList<View> children = ((Grid)((Button)sender).Parent).Children;
 
             IEnumerator<View> childrenEnum = children.GetEnumerator();
 
@@ -84,23 +101,15 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                     case 0:
                         name = ((Label)childrenEnum.Current).Text;
                         break;
+                    case 1:
+                        startingHr = ((Syncfusion.XForms.Pickers.SfTimePicker)childrenEnum.Current).Time.Hours;
+                        startingMin = ((Syncfusion.XForms.Pickers.SfTimePicker)childrenEnum.Current).Time.Minutes;
+                        startingSec = ((Syncfusion.XForms.Pickers.SfTimePicker)childrenEnum.Current).Time.Seconds;
+                        break;
                     case 2:
-                        startingHr = int.Parse(((Entry)childrenEnum.Current).Text);
-                        break;
-                    case 3:
-                        startingMin = int.Parse(((Entry)childrenEnum.Current).Text);
-                        break;
-                    case 4:
-                        startingSec = int.Parse(((Entry)childrenEnum.Current).Text);
-                        break;
-                    case 7:
-                        endingHr = int.Parse(((Entry)childrenEnum.Current).Text);
-                        break;
-                    case 8:
-                        endingMin = int.Parse(((Entry)childrenEnum.Current).Text);
-                        break;
-                    case 9:
-                        endingSec = int.Parse(((Entry)childrenEnum.Current).Text);
+                        endingHr = ((Syncfusion.XForms.Pickers.SfTimePicker)childrenEnum.Current).Time.Hours;
+                        endingMin = ((Syncfusion.XForms.Pickers.SfTimePicker)childrenEnum.Current).Time.Minutes;
+                        endingSec = ((Syncfusion.XForms.Pickers.SfTimePicker)childrenEnum.Current).Time.Seconds;
                         break;
                 }
                 i++;
@@ -168,13 +177,14 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             string externalMediaDir = FileSystem.AppDataDirectory;
             for (int i = 0; i < obj.Count; i++)
             {
-                int startHr = int.Parse(((Entry)((Grid)obj[i]).Children[2]).Text),
-                    startMin = int.Parse(((Entry)((Grid)obj[i]).Children[3]).Text),
-                    startSec = int.Parse(((Entry)((Grid)obj[i]).Children[4]).Text),
-                    order = int.Parse(((Entry)((Grid)obj[i]).Children[5]).Text),
-                    endHr = int.Parse(((Entry)((Grid)obj[i]).Children[7]).Text),
-                    endMin = int.Parse(((Entry)((Grid)obj[i]).Children[8]).Text),
-                    endSec = int.Parse(((Entry)((Grid)obj[i]).Children[9]).Text);
+                Syncfusion.XForms.Pickers.SfTimePicker CStartTime = (Syncfusion.XForms.Pickers.SfTimePicker)((Grid)obj[i]).Children[1],
+                    CEndTime = (Syncfusion.XForms.Pickers.SfTimePicker)((Grid)obj[i]).Children[2];
+                int startHr = CStartTime.Time.Hours,
+                    startMin = CStartTime.Time.Minutes,
+                    startSec = CStartTime.Time.Seconds,
+                    endHr = CEndTime.Time.Hours,
+                    endMin = CEndTime.Time.Minutes,
+                    endSec = CEndTime.Time.Seconds;
 
                 IEnumerator ienum = src.GetEnumerator();
 
@@ -192,7 +202,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
                 { // UWP
                     fileName = externalMediaDir + "\\" + ((MusicRecording)ienum.Current).RecordingName + ".mp3";
                 }
-                orders.Add(order, new object[3] { fileName, new int[3] { startHr, startMin, startSec }, new int[3] { endHr, endMin, endSec } });
+                orders.Add(i, new object[3] { fileName, new int[3] { startHr, startMin, startSec }, new int[3] { endHr, endMin, endSec } });
 
                 combinedRemNames.Append(((MusicRecording)ienum.Current).RecordingName);
             }
@@ -200,9 +210,9 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
             await App.Database.SaveRemixItemAsync(new MusicRemix
             {
-                ID = 0,
+                ID = m_IID,
                 RemixName = Device.RuntimePlatform == Device.Android ? $"{combinedRemNamesStr}.opus" : $"{combinedRemNamesStr}.mp3",
-                MusicRecordings = mMarkedForRemixRecs
+                MusicRecordings = System.Text.Json.JsonSerializer.Serialize(mMarkedForRemixRecs)
             });
 
             List<ISampleProvider> sampleProviders = new List<ISampleProvider>();
@@ -310,6 +320,11 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             }
 
             await Navigation.PopModalAsync();
+        }
+
+        private void DropGestureRecognizer_Drop_Collection(object sender, DropEventArgs e)
+        {
+            ((MusicRecordingsRemixesViewModel)BindingContext).OnItemDropped((MusicRecording)((DropGestureRecognizer)sender).BindingContext);
         }
 
         public static short[] BytesToShorts(byte[] input)
