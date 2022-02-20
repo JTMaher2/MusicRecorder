@@ -6,13 +6,13 @@
     <UserSecretsId>9badfc8a-a169-4d25-abc2-f321df0ab951</UserSecretsId>
     <AssemblyName>MusicRecorder</AssemblyName>
     <RootNamespace>Io.Github.Jtmaher2.Musicrecorder</RootNamespace>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <Description>App for recording music.</Description>
     <Authors>James Maher</Authors>
     <Company />
     <Product>Music Recorder</Product>
     <Copyright>2022</Copyright>
-    <PackageReleaseNotes>1.0.7: 1) Made it possible to re-order remix list using touch gestures, 2) Made it possible to visually select start and stop times of remixes using Syncfusion time picker widget, 3) Fixed crashes on remix page., 4) Go back to main page after importing a recording.</PackageReleaseNotes>
+    <PackageReleaseNotes>1.0.8: Updated Nuget packages and Syncfusion license</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>music,recording,sound</PackageTags>
     <RepositoryType>git</RepositoryType>
@@ -49,8 +49,8 @@
     <PackageReference Include="NAudio.Core" Version="2.0.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
     <PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
-    <PackageReference Include="Syncfusion.Xamarin.SfPicker" Version="19.4.0.48" />
-    <PackageReference Include="System.Text.Json" Version="6.0.1" />
+    <PackageReference Include="Syncfusion.Xamarin.SfPicker" Version="19.4.0.52" />
+    <PackageReference Include="System.Text.Json" Version="6.0.2" />
     <PackageReference Include="Xamarin.CommunityToolkit" Version="2.0.0" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.1" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2337" />
