@@ -37,12 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="SyncfusionLicense.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.4" />
     <PackageReference Include="Autofac" Version="6.3.0" />
     <PackageReference Include="Concentus.OggFile" Version="1.0.4" />

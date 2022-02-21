@@ -13,5 +13,5 @@
 /*.flac
 /*.opus
 /MusicRecorderUWP/AppPackages
-/MusicRecorder/SyncfusionLicense.txt
-/MusicRecorder.Android/Resources
+/MusicRecorderUWP/Strings/en-US/Resources.resw
+/MusicRecorder.Android/Resources/values/strings.xml

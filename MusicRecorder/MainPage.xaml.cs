@@ -52,8 +52,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         public MainPage()
         {
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(File.ReadAllText("SyncfusionLicense.txt"));
-
             InitializeComponent();
             BuildContainer();
             DependencyResolver.ResolveUsing(type => container.IsRegistered(type) ? container.Resolve(type) : null);

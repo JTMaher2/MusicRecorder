@@ -28,6 +28,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(GetString(Resource.String.SyncfusionLicense));
             AppCompatDelegate.DefaultNightMode = AppCompatDelegate.ModeNightNo; // disable dark mode
 
             TabLayoutResource = Resource.Layout.Tabbar;
