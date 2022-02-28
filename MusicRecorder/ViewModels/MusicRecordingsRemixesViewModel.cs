@@ -254,12 +254,12 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
 
         private void OnItemDragged(MusicRecording item)
         {
-            MusicRecordings.ForEach(i => i.m_bIsBeingDragged = item == i);
+            MusicRecordings.ForEach(i => i.MBIsBeingDragged = item == i);
         }
 
         public void OnItemDropped(MusicRecording CItem)
         {
-            MusicRecording CItemToMove = MusicRecordings.First(i => i.m_bIsBeingDragged);
+            MusicRecording CItemToMove = MusicRecordings.First(i => i.MBIsBeingDragged);
             
             if (CItemToMove == null || CItem == null || CItemToMove == CItem)
                 return;
@@ -269,7 +269,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.ViewModels
             MusicRecordings.Remove(CItemToMove);
             MusicRecordings.Insert(iIndex, CItemToMove);
             
-            CItemToMove.m_bIsBeingDragged = false;
+            CItemToMove.MBIsBeingDragged = false;
         }
     }
 }

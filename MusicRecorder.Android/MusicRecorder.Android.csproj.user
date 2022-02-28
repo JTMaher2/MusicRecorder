@@ -6,5 +6,7 @@
     <DefaultDevice>Pixel_5_API_31</DefaultDevice>
     <ProjectView>ProjectFiles</ProjectView>
     <ActiveDebugProfile>Pixel_5_API_31</ActiveDebugProfile>
+    <SelectedPlatformGroup>Emulator</SelectedPlatformGroup>
+    <AndroidDesignerPreferredDevice>Nexus 4</AndroidDesignerPreferredDevice>
   </PropertyGroup>
 </Project>

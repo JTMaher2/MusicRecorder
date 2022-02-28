@@ -37,7 +37,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
             base.OnCreate(savedInstanceState);
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
-            Xamarin.Forms.Forms.SetFlags(new string[] { "SwipeView_Experimental" });
             Xamarin.Forms.Forms.Init(this, savedInstanceState);
 
             MainPageDroid.RegisterType<IRecordAudio, RecordAudio>();

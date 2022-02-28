@@ -14,6 +14,7 @@
    limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
 using Xamarin.Essentials;
 using Xamarin.Forms;
@@ -41,11 +42,11 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
                 if (result != null)
                 {
-                    await App.Database.SaveItemAsync(System.Text.Json.JsonSerializer.Deserialize<MusicRecording>(await mAudioRecorderService.Import(result.FullPath, notes.Text)));
+                    await App.Database.SaveItemAsync(JsonConvert.DeserializeObject<MusicRecording>(await mAudioRecorderService.Import(result.FullPath, notes.Text)));
                     await Navigation.PopModalAsync();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // The user canceled or something went wrong
             }

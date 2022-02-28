@@ -6,13 +6,13 @@
     <UserSecretsId>9badfc8a-a169-4d25-abc2-f321df0ab951</UserSecretsId>
     <AssemblyName>MusicRecorder</AssemblyName>
     <RootNamespace>Io.Github.Jtmaher2.Musicrecorder</RootNamespace>
-    <Version>1.0.8</Version>
+    <Version>1.0.9</Version>
     <Description>App for recording music.</Description>
     <Authors>James Maher</Authors>
     <Company />
     <Product>Music Recorder</Product>
     <Copyright>2022</Copyright>
-    <PackageReleaseNotes>1.0.8: Updated Nuget packages and Syncfusion license</PackageReleaseNotes>
+    <PackageReleaseNotes>1.0.9: Updated Nuget packages and optimized code.</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>music,recording,sound</PackageTags>
     <RepositoryType>git</RepositoryType>
@@ -24,9 +24,16 @@
     <ApplicationIcon>Square44x44Logo.targetsize-24_altform-unplated.ico</ApplicationIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>F:\Xamarin Projects\MusicRecorder\LICENSE</PackageLicenseFile>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <PlatformTarget>x64</PlatformTarget>
@@ -41,10 +48,10 @@
     <PackageReference Include="Autofac" Version="6.3.0" />
     <PackageReference Include="Concentus.OggFile" Version="1.0.4" />
     <PackageReference Include="NAudio.Core" Version="2.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
     <PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
-    <PackageReference Include="Syncfusion.Xamarin.SfPicker" Version="19.4.0.52" />
-    <PackageReference Include="System.Text.Json" Version="6.0.2" />
+    <PackageReference Include="Syncfusion.Xamarin.SfPicker" Version="19.4.0.53" />
     <PackageReference Include="Xamarin.CommunityToolkit" Version="2.0.0" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.1" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2337" />

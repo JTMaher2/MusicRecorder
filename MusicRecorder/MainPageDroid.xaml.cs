@@ -41,7 +41,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
 
         private int mID;
 
-        private string mName;
         private string mRealName;
         private string mRemixName;
         private string mFileName;
@@ -77,7 +76,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             if (mExistingRecs.Count > 0)
             {
                 mID = mExistingRecs[0].ID;
-                mName = mExistingRecs[0].RecordingName;
                 mRealName = mExistingRecs[0].RealRecordingName;
             }
 
@@ -215,7 +213,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             if (e.CurrentItem != null)
             {
                 mID = ((MusicRecording)e.CurrentItem).ID;
-                mName = ((MusicRecording)e.CurrentItem).RecordingName;
                 mRealName = ((MusicRecording)e.CurrentItem).RealRecordingName;
             }
         }

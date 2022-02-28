@@ -15,6 +15,7 @@
 */
 
 using Io.Github.Jtmaher2.MusicRecorder.Services;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +53,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 mId = mr.ID;
                 remixNameEnt.Text = mr.RemixName;
-                mMusicRecordings = string.IsNullOrWhiteSpace(mr.MusicRecordings) ? new List<int>() : System.Text.Json.JsonSerializer.Deserialize<List<int>>(mr.MusicRecordings);
+                mMusicRecordings = string.IsNullOrWhiteSpace(mr.MusicRecordings) ? new List<int>() : JsonConvert.DeserializeObject<List<int>>(mr.MusicRecordings);
                 mOrigFileName = remixNameEnt.Text;
             }
         }
@@ -63,7 +64,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 RemixName = remixNameEnt.Text,
                 ID = mId,
-                MusicRecordings = System.Text.Json.JsonSerializer.Serialize(mMusicRecordings)
+                MusicRecordings = JsonConvert.SerializeObject(mMusicRecordings)
             });
 
             if (Device.RuntimePlatform == Device.Android)
@@ -136,15 +137,10 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             return base.OnBackButtonPressed();
         }
 
-        private async void startRemBtn_Clicked(object sender, EventArgs e)
+        private async void StartRemBtn_Clicked(object sender, EventArgs e)
         {
 
             await Navigation.PushModalAsync(new RemixPage(mMusicRecordings, mId));
-        }
-
-        private void stopRemBtn_Clicked(object sender, EventArgs e)
-        {
-
         }
     }
 }

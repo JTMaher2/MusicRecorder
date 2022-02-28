@@ -33,8 +33,7 @@ public static class Constants
     {
         get
         {
-            string basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return Path.Combine(basePath, DatabaseFilename);
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DatabaseFilename);
         }
     }
 }

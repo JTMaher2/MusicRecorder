@@ -19,7 +19,6 @@ using Io.Github.Jtmaher2.MusicRecorder.Services;
 using Io.Github.Jtmaher2.MusicRecorder.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Forms;
@@ -55,8 +54,8 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             InitializeComponent();
             BuildContainer();
             DependencyResolver.ResolveUsing(type => container.IsRegistered(type) ? container.Resolve(type) : null);
-
-            mAudioRecorderService = DependencyService.Resolve<IRecordAudio>();            
+            
+            mAudioRecorderService = DependencyService.Resolve<IRecordAudio>();
         }
 
         private async void PopulateRecAndRemList()

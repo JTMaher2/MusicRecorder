@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Android.Widget;
 using Android.App;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 {
@@ -249,7 +250,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder.Droid
 			File.WriteAllBytes(FileSystem.AppDataDirectory + "/" + filePathEntry[(filePathEntry.LastIndexOf('/') + 1)..], File.ReadAllBytes(filePathEntry));
 			
 			// add to library
-			return Task.FromResult(System.Text.Json.JsonSerializer.Serialize(new MusicRecording
+			return Task.FromResult(JsonConvert.SerializeObject(new MusicRecording
 			{
 				Composer = string.Join(',', musicProperties.ExtractMetadata(MetadataKey.Composer)),
 				RealRecordingName = filePathEntry[(filePathEntry.LastIndexOf("/") + 1)..],

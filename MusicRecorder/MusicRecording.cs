@@ -29,6 +29,6 @@ namespace Io.Github.Jtmaher2.MusicRecorder
         public string Notes { get; set; }
 
         [Ignore]
-        public bool m_bIsBeingDragged { get; set; } // this property is only used for visual purposes and should not be stored in DB
+        public bool MBIsBeingDragged { get; set; } // this property is only used for visual purposes and should not be stored in DB
     }
 }

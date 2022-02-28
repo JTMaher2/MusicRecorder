@@ -31,6 +31,7 @@ using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
+using Newtonsoft.Json;
 
 namespace Io.Github.Jtmaher2.MusicRecorder
 {
@@ -212,7 +213,7 @@ namespace Io.Github.Jtmaher2.MusicRecorder
             {
                 ID = m_IID,
                 RemixName = Device.RuntimePlatform == Device.Android ? $"{combinedRemNamesStr}.opus" : $"{combinedRemNamesStr}.mp3",
-                MusicRecordings = System.Text.Json.JsonSerializer.Serialize(mMarkedForRemixRecs)
+                MusicRecordings = JsonConvert.SerializeObject(mMarkedForRemixRecs)
             });
 
             List<ISampleProvider> sampleProviders = new List<ISampleProvider>();

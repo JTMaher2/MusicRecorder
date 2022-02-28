@@ -15,7 +15,6 @@
 */
 
 using AsyncAwaitBestPractices;
-using Io.Github.Jtmaher2.MusicRecorder;
 using SQLite;
 using System;
 using System.Collections.Generic;
